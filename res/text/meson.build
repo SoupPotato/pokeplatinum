@@ -765,6 +765,8 @@ pokedex_message_banks = custom_target('pokedex_message_banks',
         '--output-dir', '@OUTDIR@'
     ]
 )
+
+
 message_bank_files += pokedex_message_banks
 
 message_banks_narc = custom_target('pl_msg.narc',

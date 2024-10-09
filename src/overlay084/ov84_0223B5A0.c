@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/field/map_load.h"
+
 #include "struct_decls/struct_0200112C_decl.h"
 #include "struct_decls/struct_02018340_decl.h"
 #include "struct_defs/struct_0202D7B0.h"
@@ -30,6 +32,7 @@
 #include "message.h"
 #include "narc.h"
 #include "overlay_manager.h"
+#include "render_text.h"
 #include "save_player.h"
 #include "strbuf.h"
 #include "string_template.h"
@@ -37,7 +40,6 @@
 #include "trainer_info.h"
 #include "unk_0200112C.h"
 #include "unk_02001AF4.h"
-#include "unk_02002328.h"
 #include "unk_02002B7C.h"
 #include "unk_020041CC.h"
 #include "unk_02005474.h"
@@ -428,7 +430,7 @@ int ov84_0223B5A0(OverlayManager *param0, int *param1)
     sub_0201E450(4);
 
     ov84_0223F040(v0);
-    sub_02002B20(1);
+    RenderControlFlags_SetSpeedUpOnTouch(1);
     ov84_0223F1F8(v0);
     ov84_0223F25C(v0);
     ov84_0223F2FC(v0);
@@ -1981,7 +1983,7 @@ static void ov84_0223D5AC(UnkStruct_ov84_0223B5A0 *param0)
             v1++;
         }
 
-        if ((param0->unk_C4->unk_76_1 == 3) || (param0->unk_C4->unk_76_1 == 2)) {
+        if ((param0->unk_C4->mapLoadType == MAP_LOAD_TYPE_COLOSSEUM) || (param0->unk_C4->mapLoadType == MAP_LOAD_TYPE_UNION)) {
             if (param0->unk_C4->unk_04[param0->unk_C4->unk_64].unk_08 == 5) {
                 v3[v1] = 2;
                 v1++;
