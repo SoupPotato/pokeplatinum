@@ -3,17 +3,14 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_02006C24_decl.h"
-#include "struct_decls/struct_02018340_decl.h"
-#include "struct_decls/struct_020508D4_decl.h"
 #include "struct_decls/struct_0205E884_decl.h"
 #include "struct_decls/struct_02061AB4_decl.h"
 #include "struct_defs/struct_02099F80.h"
 
 #include "field/field_system.h"
 #include "field/field_system_sub2_t.h"
+#include "overlay005/fieldmap.h"
 #include "overlay005/motion_blur.h"
-#include "overlay005/ov5_021D0D80.h"
 #include "overlay005/ov5_021D1A94.h"
 #include "overlay005/ov5_021D521C.h"
 #include "overlay005/struct_ov5_021D1BEC_decl.h"
@@ -21,26 +18,24 @@
 #include "overlay006/funcptr_ov6_0223E6EC.h"
 #include "overlay006/struct_ov6_0223E6EC.h"
 #include "overlay006/struct_ov6_0223FDE4_decl.h"
-#include "overlay084/struct_ov84_0223BA5C.h"
-#include "overlay097/struct_ov97_0222DB78.h"
 #include "overlay115/camera_angle.h"
 
+#include "bg_window.h"
 #include "camera.h"
 #include "core_sys.h"
 #include "easy3d_object.h"
 #include "field_system.h"
+#include "field_task.h"
+#include "graphics.h"
 #include "gx_layers.h"
 #include "heap.h"
 #include "map_object.h"
+#include "math.h"
 #include "narc.h"
 #include "player_avatar.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "unk_02005474.h"
-#include "unk_02006E3C.h"
-#include "unk_02018340.h"
-#include "unk_0201D15C.h"
-#include "unk_020508D4.h"
 #include "unk_020655F4.h"
 
 void include_unk_ov6_02248F30();
@@ -258,9 +253,9 @@ static void ov6_0223E140(UnkStruct_ov6_0223E140 *param0);
 static void ov6_0223E198(UnkStruct_ov6_0223E140 *param0);
 static u32 ov6_0223E1AC(const UnkStruct_ov6_0223E140 *param0);
 static void ov6_0223E1B0(void);
-static void ov6_0223E1D0(BGL *param0);
-static void ov6_0223E2AC(BGL *param0);
-static void ov6_0223E2A4(BGL *param0);
+static void ov6_0223E1D0(BgConfig *param0);
+static void ov6_0223E2AC(BgConfig *param0);
+static void ov6_0223E2A4(BgConfig *param0);
 static MotionBlur *ov6_0223E2BC(int param0, int param1);
 static void ov6_0223E2E8(UnkStruct_ov6_0223E140 *param0);
 static void ov6_0223E234(UnkStruct_ov6_0223E140 *param0);
@@ -368,24 +363,24 @@ static void ov6_0223E1B0(void)
     GXLayers_SetBanks(&v0);
 }
 
-static void ov6_0223E1D0(BGL *param0)
+static void ov6_0223E1D0(BgConfig *param0)
 {
     {
-        UnkStruct_ov84_0223BA5C v0 = {
+        GraphicsModes v0 = {
             GX_DISPMODE_GRAPHICS,
             GX_BGMODE_0,
             GX_BGMODE_0,
             GX_BG0_AS_3D
         };
 
-        sub_02018368(&v0);
+        SetAllGraphicsModes(&v0);
     }
 
     GXLayers_EngineAToggleLayers(
         GX_PLANEMASK_BG0, 1);
 
     {
-        UnkStruct_ov97_0222DB78 v1 = {
+        BgTemplate v1 = {
             0,
             0,
             0x800,
@@ -401,9 +396,9 @@ static void ov6_0223E1D0(BGL *param0)
             0
         };
 
-        sub_020183C4(param0, 3, &v1, 0);
-        sub_02019690(3, 32, 0, 4);
-        sub_02019EBC(param0, 3);
+        Bg_InitFromTemplate(param0, 3, &v1, 0);
+        Bg_ClearTilesRange(3, 32, 0, 4);
+        Bg_ClearTilemap(param0, 3);
     }
 }
 
@@ -422,8 +417,8 @@ static void ov6_0223E25C(SysTask *param0, void *param1)
     UnkStruct_ov6_0223E140 *v0 = param1;
 
     ov6_0223E1B0();
-    ov6_0223E2A4(v0->fieldSystem->unk_08);
-    ov6_0223E1D0(v0->fieldSystem->unk_08);
+    ov6_0223E2A4(v0->fieldSystem->bgConfig);
+    ov6_0223E1D0(v0->fieldSystem->bgConfig);
 
     SysTask_Done(param0);
 }
@@ -433,17 +428,17 @@ static void ov6_0223E280(SysTask *param0, void *param1)
     UnkStruct_ov6_0223E140 *v0 = param1;
 
     GXLayers_SetBanks(&v0->unk_04);
-    ov6_0223E2A4(v0->fieldSystem->unk_08);
-    ov6_0223E2AC(v0->fieldSystem->unk_08);
+    ov6_0223E2A4(v0->fieldSystem->bgConfig);
+    ov6_0223E2AC(v0->fieldSystem->bgConfig);
     SysTask_Done(param0);
 }
 
-static void ov6_0223E2A4(BGL *param0)
+static void ov6_0223E2A4(BgConfig *param0)
 {
     ov5_021D143C(param0);
 }
 
-static void ov6_0223E2AC(BGL *param0)
+static void ov6_0223E2AC(BgConfig *param0)
 {
     ov5_021D1434(param0);
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG0, 1);
@@ -497,16 +492,16 @@ static void ov6_0223E318(FieldSystem *fieldSystem, u32 param1, BOOL param2)
     v0 = MapObjMan_LocalMapObjByIndex(fieldSystem->mapObjMan, param1);
 
     if (param2 == 1) {
-        MapObject_SetStatusFlagOn(v0, (1 << 20));
+        MapObject_SetStatusFlagOn(v0, MAP_OBJ_STATUS_HIDE_SHADOW);
     } else {
-        MapObject_SetStatusFlagOff(v0, (1 << 20));
+        MapObject_SetStatusFlagOff(v0, MAP_OBJ_STATUS_HIDE_SHADOW);
     }
 }
 
-static BOOL ov6_0223E33C(TaskManager *taskMan)
+static BOOL ov6_0223E33C(FieldTask *taskMan)
 {
-    FieldSystem *fieldSystem = TaskManager_FieldSystem(taskMan);
-    UnkStruct_ov6_0223E33C *v1 = TaskManager_Environment(taskMan);
+    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(taskMan);
+    UnkStruct_ov6_0223E33C *v1 = FieldTask_GetEnv(taskMan);
 
     switch (v1->unk_0C) {
     case 0:
@@ -525,16 +520,16 @@ static BOOL ov6_0223E33C(TaskManager *taskMan)
     return 0;
 }
 
-void ov6_0223E384(TaskManager *taskMan)
+void ov6_0223E384(FieldTask *taskMan)
 {
-    FieldSystem *fieldSystem = TaskManager_FieldSystem(taskMan);
+    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(taskMan);
     UnkStruct_ov6_0223E33C *v1 = Heap_AllocFromHeap(4, sizeof(UnkStruct_ov6_0223E33C));
 
     memset(v1, 0, sizeof(UnkStruct_ov6_0223E33C));
     v1->unk_00 = ov6_0223FDE4(4);
 
     ov6_0223FE1C(v1->unk_00, (FX32_CONST(2.0f)), 0, 1, 16, fieldSystem->camera);
-    FieldTask_Start(taskMan, ov6_0223E33C, v1);
+    FieldTask_InitCall(taskMan, ov6_0223E33C, v1);
 }
 
 static void ov6_0223E3D8(UnkStruct_ov6_0223E33C *param0)
@@ -553,10 +548,10 @@ static void ov6_0223E3D8(UnkStruct_ov6_0223E33C *param0)
     }
 }
 
-static BOOL ov6_0223E408(TaskManager *param0)
+static BOOL ov6_0223E408(FieldTask *param0)
 {
-    FieldSystem *fieldSystem = TaskManager_FieldSystem(param0);
-    UnkStruct_ov6_0223E33C *v1 = TaskManager_Environment(param0);
+    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
+    UnkStruct_ov6_0223E33C *v1 = FieldTask_GetEnv(param0);
 
     switch (v1->unk_0C) {
     case 0:
@@ -582,7 +577,7 @@ static BOOL ov6_0223E408(TaskManager *param0)
         ov6_0223E3D8(v1);
 
         if (ov6_0223FF6C(v1->unk_00) == 1) {
-            sub_020057A4(1628, 0);
+            Sound_StopEffect(1628, 0);
             v1->unk_0C++;
             v1->unk_04 = 16;
         }
@@ -612,9 +607,9 @@ static BOOL ov6_0223E408(TaskManager *param0)
     return 0;
 }
 
-void ov6_0223E4EC(TaskManager *param0)
+void ov6_0223E4EC(FieldTask *param0)
 {
-    FieldSystem *fieldSystem = TaskManager_FieldSystem(param0);
+    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
     UnkStruct_ov6_0223E33C *v1 = Heap_AllocFromHeap(4, sizeof(UnkStruct_ov6_0223E33C));
 
     memset(v1, 0, sizeof(UnkStruct_ov6_0223E33C));
@@ -623,7 +618,7 @@ void ov6_0223E4EC(TaskManager *param0)
     ov6_0223FE1C(v1->unk_00, (FX32_CONST(4.0f)), 0, 1, 24, fieldSystem->camera);
 
     v1->unk_08 = ov6_0223FFF4(v1->unk_00);
-    FieldTask_Start(param0, ov6_0223E408, v1);
+    FieldTask_InitCall(param0, ov6_0223E408, v1);
 }
 
 static void ov6_0223E548(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSystem, void *param2)
@@ -834,9 +829,9 @@ static void ov6_0223E7B4(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     v1 = MapObjMan_LocalMapObjByIndex(fieldSystem->mapObjMan, 0);
     GF_ASSERT(v1);
 
-    v2 = MapObject_GetXPos(v1);
+    v2 = MapObject_GetX(v1);
     v3 = 0;
-    v4 = MapObject_GetZPos(v1);
+    v4 = MapObject_GetZ(v1);
 
     v0->unk_00 = ov6_02240768(4);
     ov6_0224077C(v0->unk_00, v2, v3, v4);
@@ -1143,7 +1138,7 @@ static BOOL ov6_0223EBDC(UnkStruct_ov6_0223EA98 *param0)
     case 3:
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &v3);
         v0[0] = ov6_0223FD18(&param0->unk_E4, param0->unk_D0);
-        param0->unk_D8 += (sub_0201D264(param0->unk_D0 * (180 / 20)) * 3);
+        param0->unk_D8 += (CalcCosineDegrees_Wraparound(param0->unk_D0 * (180 / 20)) * 3);
         param0->unk_D0++;
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_E4.unk_00, v2, param0->unk_D8);
 
@@ -1162,7 +1157,7 @@ static BOOL ov6_0223EBDC(UnkStruct_ov6_0223EA98 *param0)
     case 5:
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &v3);
         v0[0] = ov6_0223FD18(&param0->unk_E4, param0->unk_D0);
-        param0->unk_D8 -= (sub_0201D264(param0->unk_D0 * (90 / 20)) * 3);
+        param0->unk_D8 -= (CalcCosineDegrees_Wraparound(param0->unk_D0 * (90 / 20)) * 3);
         param0->unk_D0++;
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_E4.unk_00, v2, param0->unk_D8);
 
@@ -1219,7 +1214,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
     case 3:
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &v3);
         v0[0] = ov6_0223FD18(&param0->unk_E4, param0->unk_D0);
-        param0->unk_D8 += (sub_0201D264(param0->unk_D0 * (180 / 32)) * 3);
+        param0->unk_D8 += (CalcCosineDegrees_Wraparound(param0->unk_D0 * (180 / 32)) * 3);
         param0->unk_D0++;
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_E4.unk_00, v2, param0->unk_D8);
 
@@ -1233,7 +1228,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
         param0->unk_18++;
     case 5:
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &v3);
-        param0->unk_D8 -= (sub_0201D264(param0->unk_D0 * (360 / 32)) * 2);
+        param0->unk_D8 -= (CalcCosineDegrees_Wraparound(param0->unk_D0 * (360 / 32)) * 2);
         param0->unk_D0++;
         Easy3DObject_SetPosition(&param0->unk_24, v1, v2, param0->unk_D8);
 
@@ -1257,7 +1252,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
         v0[0] = ov6_0223FD18(&param0->unk_E4, param0->unk_D0);
         v0[1] = ov6_0223FD18(&param0->unk_F4, param0->unk_D0);
         param0->unk_D0++;
-        param0->unk_DC -= (sub_0201D264((param0->unk_D0 + 1) * (180 / 32)) * 4);
+        param0->unk_DC -= (CalcCosineDegrees_Wraparound((param0->unk_D0 + 1) * (180 / 32)) * 4);
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_E4.unk_00 + param0->unk_DC, v2, param0->unk_F4.unk_00);
 
         if (v0[0] && v0[1]) {
@@ -1266,13 +1261,13 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
         break;
     case 8:
         param0->unk_D0 = 0;
-        sub_0206296C(param0->unk_10C, 2);
+        MapObject_Face(param0->unk_10C, 2);
         LocalMapObj_SetAnimationCode(param0->unk_110, 0x2);
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &param0->unk_D8);
         param0->unk_18++;
     case 9:
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &v3);
-        param0->unk_D8 += (sub_0201D264(param0->unk_D0 * (360 / 32)) * 1);
+        param0->unk_D8 += (CalcCosineDegrees_Wraparound(param0->unk_D0 * (360 / 32)) * 1);
         param0->unk_D0++;
         Easy3DObject_SetPosition(&param0->unk_24, v1, v2, param0->unk_D8);
 
@@ -1296,7 +1291,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &v3);
         v0[0] = ov6_0223FD18(&param0->unk_E4, param0->unk_D0);
         v0[1] = ov6_0223FD18(&param0->unk_F4, param0->unk_D0);
-        param0->unk_E0 += (sub_0201D264(param0->unk_D0 * (180 / 32)) * 2);
+        param0->unk_E0 += (CalcCosineDegrees_Wraparound(param0->unk_D0 * (180 / 32)) * 2);
         param0->unk_D0++;
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_E4.unk_00, v2, param0->unk_F4.unk_00 + param0->unk_E0);
 
@@ -1394,7 +1389,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
             GX_SetMasterBrightness(param0->unk_0C);
         }
 
-        param0->unk_DC += (sub_0201D264((param0->unk_D0 + 1) * (180 / 32)) * 8);
+        param0->unk_DC += (CalcCosineDegrees_Wraparound((param0->unk_D0 + 1) * (180 / 32)) * 8);
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_D4 + param0->unk_DC, v2, param0->unk_F4.unk_00);
 
         if (v0[0]) {
@@ -1429,17 +1424,17 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
 
     if (param0->unk_1C != 0) {
         if (param0->unk_1C == 20) {
-            sub_0206296C(param0->unk_10C, 1);
+            MapObject_Face(param0->unk_10C, 1);
             LocalMapObj_SetAnimationCode(param0->unk_110, 0x1);
         }
 
         if (param0->unk_1C == 40) {
-            sub_0206296C(param0->unk_10C, 2);
+            MapObject_Face(param0->unk_10C, 2);
             LocalMapObj_SetAnimationCode(param0->unk_110, 0x3);
         }
 
         if (param0->unk_1C == 50) {
-            sub_0206296C(param0->unk_10C, 0);
+            MapObject_Face(param0->unk_10C, 0);
             LocalMapObj_SetAnimationCode(param0->unk_110, 0x0);
         }
 
@@ -2062,12 +2057,12 @@ UnkStruct_ov6_022401B8 *ov6_02240104(u32 param0, FieldSystem *fieldSystem)
     ov6_02240260(&v0->unk_34, v0->unk_11C, &v0->unk_10C);
 
     {
-        BGL *v1 = sub_0203D170(v0->fieldSystem);
+        BgConfig *v1 = FieldSystem_GetBgConfig(v0->fieldSystem);
 
-        sub_02006E3C(172, 74, v1, 2, 0, 0, 0, param0);
-        sub_02006E60(172, 76, v1, 2, 0, 0, 0, param0);
-        sub_02006E84(172, 75, 0, 0x20 * 6, 0x20, param0);
-        BGL_SetPriority(2, 1);
+        Graphics_LoadTilesToBgLayer(172, 74, v1, 2, 0, 0, 0, param0);
+        Graphics_LoadTilemapToBgLayer(172, 76, v1, 2, 0, 0, 0, param0);
+        Graphics_LoadPalette(172, 75, 0, 0x20 * 6, 0x20, param0);
+        Bg_SetPriority(2, 1);
 
         v0->unk_34.unk_00 = 0;
         v0->unk_34.unk_04 = 31;
@@ -2089,10 +2084,10 @@ void ov6_022401D0(UnkStruct_ov6_022401B8 *param0, u32 param1)
     VecFx32 v0;
 
     ov6_02240240(&param0->unk_08, param0->fieldSystem, 1);
-    MapObject_PosVectorOut(param0->unk_08.unk_00, &v0);
+    MapObject_GetPosPtr(param0->unk_08.unk_00, &v0);
     ov6_022402E4(&param0->unk_34, v0.x, v0.y, v0.z);
     ov6_02240240(&param0->unk_08, param0->fieldSystem, param1);
-    MapObject_PosVectorOut(param0->unk_08.unk_00, &v0);
+    MapObject_GetPosPtr(param0->unk_08.unk_00, &v0);
 
     param0->unk_00 = 1;
 }
@@ -2816,7 +2811,7 @@ void ov6_02240C44(UnkStruct_ov6_02240C44 *param0, u32 param1)
 
     v1 = MapObjMan_LocalMapObjByIndex(param0->fieldSystem->mapObjMan, param1);
 
-    MapObject_PosVectorOut(v1, &v0);
+    MapObject_GetPosPtr(v1, &v0);
 
     ov6_0223FDCC(&param0->unk_00, v0.x, v0.y, v0.z);
     ov6_0223FDC4(&param0->unk_00, 1);

@@ -4,15 +4,12 @@
 #include <string.h>
 
 #include "struct_decls/font_oam.h"
-#include "struct_decls/struct_02006C24_decl.h"
 #include "struct_decls/struct_0200C704_decl.h"
 #include "struct_decls/struct_02012744_decl.h"
-#include "struct_decls/struct_02018340_decl.h"
 #include "struct_defs/sprite_manager_allocation.h"
 #include "struct_defs/sprite_template.h"
 #include "struct_defs/struct_0200D0F4.h"
 #include "struct_defs/struct_020127E8.h"
-#include "struct_defs/struct_0205AA50.h"
 
 #include "overlay117/ov117_02260668.h"
 #include "overlay117/ov117_022666C0.h"
@@ -34,20 +31,20 @@
 #include "overlay117/struct_ov117_02266344.h"
 #include "overlay117/struct_ov117_02266F10.h"
 
+#include "bg_window.h"
 #include "communication_system.h"
 #include "error_handling.h"
+#include "font.h"
+#include "graphics.h"
+#include "math.h"
 #include "message.h"
 #include "narc.h"
+#include "palette.h"
 #include "strbuf.h"
-#include "unk_02002B7C.h"
-#include "unk_02002F38.h"
+#include "text.h"
 #include "unk_02005474.h"
-#include "unk_02006E3C.h"
 #include "unk_0200C6E4.h"
 #include "unk_02012744.h"
-#include "unk_02018340.h"
-#include "unk_0201D15C.h"
-#include "unk_0201D670.h"
 #include "unk_0201E86C.h"
 
 typedef struct {
@@ -67,7 +64,7 @@ typedef struct {
     u8 unk_03;
 } UnkStruct_ov117_02266BC4;
 
-static void ov117_02263BA4(BGL *param0, UnkStruct_ov117_02263DAC *param1, int param2);
+static void ov117_02263BA4(BgConfig *param0, UnkStruct_ov117_02263DAC *param1, int param2);
 int ov117_02263DAC(UnkStruct_ov117_02261280 *param0);
 static void ov117_02263C8C(int param0, int param1, int param2, fx32 *param3, fx32 *param4);
 static int ov117_02263D08(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_02263DAC *param1, int param2, int param3, int param4);
@@ -75,7 +72,7 @@ static int ov117_02263E1C(UnkStruct_ov117_02261280 *param0, const UnkStruct_ov11
 static BOOL ov117_02263F80(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_02263EF8 *param1);
 static CellActorData *ov117_0226417C(UnkStruct_ov117_02261280 *param0, const UnkStruct_ov117_02266F10 *param1);
 static void ov117_02264214(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_02264808 *param1, UnkStruct_ov117_02263DAC *param2);
-static void ov117_02263B8C(BGL *param0, UnkStruct_ov117_02263DAC *param1);
+static void ov117_02263B8C(BgConfig *param0, UnkStruct_ov117_02263DAC *param1);
 static CellActorData *ov117_02264884(UnkStruct_ov117_02261280 *param0, int param1, int param2);
 void ov117_022648E0(UnkStruct_ov117_02261280 *param0);
 BOOL ov117_02264930(UnkStruct_ov117_02261280 *param0);
@@ -388,14 +385,14 @@ static int (*const Unk_ov117_02266B94[])(UnkStruct_ov117_02261280 *, UnkStruct_o
     ov117_022657C4,
 };
 
-void ov117_02263AF0(BGL *param0, int param1, int param2, UnkStruct_ov117_02263DAC *param3)
+void ov117_02263AF0(BgConfig *param0, int param1, int param2, UnkStruct_ov117_02263DAC *param3)
 {
     NARC *v0;
 
     v0 = NARC_ctor(NARC_INDEX_APPLICATION__BALLOON__GRAPHIC__BALLOON_GRA, 110);
 
-    sub_020070E8(v0, Unk_ov117_02266BEC[param2].unk_00, param0, 7, 0, 0, 0, 110);
-    sub_0200710C(v0, Unk_ov117_02266BEC[param2].unk_02, param0, 7, 0, 0, 0, 110);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(v0, Unk_ov117_02266BEC[param2].unk_00, param0, 7, 0, 0, 0, 110);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v0, Unk_ov117_02266BEC[param2].unk_02, param0, 7, 0, 0, 0, 110);
     NARC_dtor(v0);
 
     MI_CpuClear8(param3, sizeof(UnkStruct_ov117_02263DAC));
@@ -409,14 +406,14 @@ void ov117_02263AF0(BGL *param0, int param1, int param2, UnkStruct_ov117_02263DA
     Sound_PlayEffect(1515);
 }
 
-static void ov117_02263B8C(BGL *param0, UnkStruct_ov117_02263DAC *param1)
+static void ov117_02263B8C(BgConfig *param0, UnkStruct_ov117_02263DAC *param1)
 {
-    sub_02019EBC(param0, 7);
+    Bg_ClearTilemap(param0, 7);
     param1->unk_00 = 0;
     param1->unk_2D = 1;
 }
 
-static void ov117_02263BA4(BGL *param0, UnkStruct_ov117_02263DAC *param1, int param2)
+static void ov117_02263BA4(BgConfig *param0, UnkStruct_ov117_02263DAC *param1, int param2)
 {
     fx32 v0, v1;
     int v2, v3;
@@ -466,10 +463,10 @@ static void ov117_02263BA4(BGL *param0, UnkStruct_ov117_02263DAC *param1, int pa
         v5 = FX_Inv(v0);
         v6 = FX_Inv(v1);
 
-        sub_0201C6A8(param0, 7, 3, v5);
-        sub_0201C6A8(param0, 7, 6, v6);
-        sub_0201C63C(param0, 7, 0, 0 - v2 + v7);
-        sub_0201C63C(param0, 7, 3, (256 - 192) / 2 + 7 - v3);
+        Bg_ScheduleAffineScale(param0, 7, 3, v5);
+        Bg_ScheduleAffineScale(param0, 7, 6, v6);
+        Bg_ScheduleScroll(param0, 7, 0, 0 - v2 + v7);
+        Bg_ScheduleScroll(param0, 7, 3, (256 - 192) / 2 + 7 - v3);
     }
 }
 
@@ -533,7 +530,7 @@ static int ov117_02263D5C(UnkStruct_ov117_02263DAC *param0)
     return 1;
 }
 
-void ov117_02263D80(UnkStruct_ov117_02261280 *param0, BGL *param1, UnkStruct_ov117_02263DAC *param2)
+void ov117_02263D80(UnkStruct_ov117_02261280 *param0, BgConfig *param1, UnkStruct_ov117_02263DAC *param2)
 {
     if (param0->unk_2FCC == 0) {
         return;
@@ -963,8 +960,8 @@ BOOL ov117_02264560(UnkStruct_ov117_02261280 *param0)
                 v1->unk_04 = (128 + 32) << FX32_SHIFT;
             }
 
-            v4 = 128 + (FX_Mul(sub_0201D2B8(v1->unk_0C), v1->unk_04)) / FX32_ONE;
-            v5 = 96 + (-FX_Mul(sub_0201D2C4(v1->unk_0C), v1->unk_04)) / FX32_ONE;
+            v4 = 128 + (FX_Mul(CalcSineDegrees_FX32(v1->unk_0C), v1->unk_04)) / FX32_ONE;
+            v5 = 96 + (-FX_Mul(CalcCosineDegrees_FX32(v1->unk_0C), v1->unk_04)) / FX32_ONE;
 
             sub_0200D500(v1->unk_00, v4, v5, ((192 + 160) << FX32_SHIFT));
 
@@ -990,8 +987,8 @@ BOOL ov117_02264560(UnkStruct_ov117_02261280 *param0)
                 v2->unk_04 = (128 + 32) << FX32_SHIFT;
             }
 
-            v4 = 128 + (FX_Mul(sub_0201D2B8(v2->unk_0C), v2->unk_04)) / FX32_ONE;
-            v5 = 96 + (-FX_Mul(sub_0201D2C4(v2->unk_0C), v2->unk_04)) / FX32_ONE;
+            v4 = 128 + (FX_Mul(CalcSineDegrees_FX32(v2->unk_0C), v2->unk_04)) / FX32_ONE;
+            v5 = 96 + (-FX_Mul(CalcCosineDegrees_FX32(v2->unk_0C), v2->unk_04)) / FX32_ONE;
 
             sub_0200D500(v2->unk_00, v4, v5, ((192 + 160) << FX32_SHIFT));
 
@@ -1017,8 +1014,8 @@ BOOL ov117_02264560(UnkStruct_ov117_02261280 *param0)
                 v3->unk_04 = (128 + 32) << FX32_SHIFT;
             }
 
-            v4 = 128 + (FX_Mul(sub_0201D2B8(v3->unk_0C), v3->unk_04)) / FX32_ONE;
-            v5 = 96 + (-FX_Mul(sub_0201D2C4(v3->unk_0C), v3->unk_04)) / FX32_ONE;
+            v4 = 128 + (FX_Mul(CalcSineDegrees_FX32(v3->unk_0C), v3->unk_04)) / FX32_ONE;
+            v5 = 96 + (-FX_Mul(CalcCosineDegrees_FX32(v3->unk_0C), v3->unk_04)) / FX32_ONE;
 
             sub_0200D500(v3->unk_00, v4, v5, ((192 + 160) << FX32_SHIFT));
 
@@ -1225,8 +1222,8 @@ void ov117_02264AB0(UnkStruct_ov117_02261280 *param0)
 
     switch (param0->unk_00->unk_30) {
     case 3:
-        sub_02019E2C(param0->unk_2C, 4, 0, 13, 12, 4, 3);
-        sub_02019E2C(param0->unk_2C, 4, 0x14, 13, 12, 4, 0);
+        Bg_ChangeTilemapRectPalette(param0->unk_2C, 4, 0, 13, 12, 4, 3);
+        Bg_ChangeTilemapRectPalette(param0->unk_2C, 4, 0x14, 13, 12, 4, 0);
         break;
     }
 }
@@ -1243,7 +1240,7 @@ void ov117_02264AF0(UnkStruct_ov117_02261280 *param0)
         v4 = Unk_ov117_02266B72[v2];
 
         for (v1 = 0; v1 < 3; v1++) {
-            v0[v2][v1] = sub_02003910(param0->unk_8C, 1, 1, v4 + v1);
+            v0[v2][v1] = PaletteData_GetBufferIndexColor(param0->unk_8C, 1, 1, v4 + v1);
         }
     }
 
@@ -1255,8 +1252,8 @@ void ov117_02264AF0(UnkStruct_ov117_02261280 *param0)
         }
     }
 
-    v8 = sub_02003164(param0->unk_8C, 1);
-    v9 = sub_0200316C(param0->unk_8C, 1);
+    v8 = PaletteData_GetUnfadedBuffer(param0->unk_8C, 1);
+    v9 = PaletteData_GetFadedBuffer(param0->unk_8C, 1);
 
     for (v1 = 0; v1 < param0->unk_00->unk_30; v1++) {
         v4 = v1;
@@ -1284,7 +1281,7 @@ void ov117_02264BF8(UnkStruct_ov117_02261280 *param0)
         v4 = Unk_ov117_02266B8A[v2];
 
         for (v1 = 0; v1 < 16; v1++) {
-            v0[v2][v1] = sub_02003910(param0->unk_8C, 3, 1, v10 * 16 + v4 + v1);
+            v0[v2][v1] = PaletteData_GetBufferIndexColor(param0->unk_8C, 3, 1, v10 * 16 + v4 + v1);
         }
     }
 
@@ -1296,8 +1293,8 @@ void ov117_02264BF8(UnkStruct_ov117_02261280 *param0)
         }
     }
 
-    v8 = sub_02003164(param0->unk_8C, 3);
-    v9 = sub_0200316C(param0->unk_8C, 3);
+    v8 = PaletteData_GetUnfadedBuffer(param0->unk_8C, 3);
+    v9 = PaletteData_GetFadedBuffer(param0->unk_8C, 3);
 
     for (v1 = 0; v1 < param0->unk_00->unk_30; v1++) {
         v4 = v1;
@@ -1325,7 +1322,7 @@ void ov117_02264D1C(UnkStruct_ov117_02261280 *param0)
         v4 = Unk_ov117_02266B82[v2];
 
         for (v1 = 0; v1 < 1; v1++) {
-            v0[v2][v1] = sub_02003910(param0->unk_8C, 3, 1, v10 * 16 + v4 + v1);
+            v0[v2][v1] = PaletteData_GetBufferIndexColor(param0->unk_8C, 3, 1, v10 * 16 + v4 + v1);
         }
     }
 
@@ -1337,8 +1334,8 @@ void ov117_02264D1C(UnkStruct_ov117_02261280 *param0)
         }
     }
 
-    v8 = sub_02003164(param0->unk_8C, 3);
-    v9 = sub_0200316C(param0->unk_8C, 3);
+    v8 = PaletteData_GetUnfadedBuffer(param0->unk_8C, 3);
+    v9 = PaletteData_GetFadedBuffer(param0->unk_8C, 3);
 
     for (v1 = 0; v1 < param0->unk_00->unk_30; v1++) {
         v4 = v1;
@@ -1493,8 +1490,8 @@ void ov117_02265064(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_022653F4 *
     v0 = Unk_ov117_02266D9C;
 
     for (v1 = 0; v1 < 3; v1++) {
-        v3 = 256 / 2 + FX_Mul(sub_0201D2B8(param1->unk_E4 + param1->unk_00[v1].unk_0C), 76);
-        v4 = 196 / 2 + (-FX_Mul(sub_0201D2C4(param1->unk_E4 + param1->unk_00[v1].unk_0C), (64 + 4)));
+        v3 = 256 / 2 + FX_Mul(CalcSineDegrees_FX32(param1->unk_E4 + param1->unk_00[v1].unk_0C), 76);
+        v4 = 196 / 2 + (-FX_Mul(CalcCosineDegrees_FX32(param1->unk_E4 + param1->unk_00[v1].unk_0C), (64 + 4)));
 
         param1->unk_00[v1].unk_00 = SpriteActor_LoadResources(param0->unk_24, param0->unk_28, &v0);
         sub_0200D500(param1->unk_00[v1].unk_00, v3, v4 + -24, ((192 + 160) << FX32_SHIFT));
@@ -1706,7 +1703,7 @@ static int ov117_02265454(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_0226
         }
 
         v6 = ((180 * param2->unk_12) << FX32_SHIFT) / 15;
-        v7 = -(FX_Mul(sub_0201D2B8(v6), (24 << FX32_SHIFT))) / FX32_ONE;
+        v7 = -(FX_Mul(CalcSineDegrees_FX32(v6), (24 << FX32_SHIFT))) / FX32_ONE;
 
         sub_0200D500(param2->unk_00, v0, v1 + v7, ((192 + 160) << FX32_SHIFT));
         sub_0200D500(param2->unk_08, v0, v1 + 24, ((192 + 160) << FX32_SHIFT));
@@ -1737,9 +1734,9 @@ static int ov117_02265644(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_0226
     }
 
     v2 = ((180 * param1->unk_F3) << FX32_SHIFT) / Unk_ov117_02266BC4[param1->unk_F4].unk_00;
-    v3 = -(FX_Mul(sub_0201D2B8(v2), (12 << FX32_SHIFT))) / FX32_ONE;
-    v0 = 256 / 2 + FX_Mul(sub_0201D2B8(param1->unk_E4 + param2->unk_0C), 76);
-    v1 = 196 / 2 + (-FX_Mul(sub_0201D2C4(param1->unk_E4 + param2->unk_0C), (64 + 4)));
+    v3 = -(FX_Mul(CalcSineDegrees_FX32(v2), (12 << FX32_SHIFT))) / FX32_ONE;
+    v0 = 256 / 2 + FX_Mul(CalcSineDegrees_FX32(param1->unk_E4 + param2->unk_0C), 76);
+    v1 = 196 / 2 + (-FX_Mul(CalcCosineDegrees_FX32(param1->unk_E4 + param2->unk_0C), (64 + 4)));
 
     sub_0200D500(param2->unk_00, v0, v1 + -24 + v3, ((192 + 160) << FX32_SHIFT));
     sub_0200D500(param2->unk_08, v0, v1 + -24 + 24, ((192 + 160) << FX32_SHIFT));
@@ -1824,8 +1821,8 @@ static int ov117_022657C4(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_0226
 
         v3 += param2->unk_0C / ((360 / 12) << FX32_SHIFT);
         v3 %= 12;
-        v4 = 256 / 2 + FX_Mul(sub_0201D2B8((360 << FX32_SHIFT) / 12 * v3), 76);
-        v5 = 196 / 2 + (-FX_Mul(sub_0201D2C4((360 << FX32_SHIFT) / 12 * v3), (64 + 4)));
+        v4 = 256 / 2 + FX_Mul(CalcSineDegrees_FX32((360 << FX32_SHIFT) / 12 * v3), 76);
+        v5 = 196 / 2 + (-FX_Mul(CalcCosineDegrees_FX32((360 << FX32_SHIFT) / 12 * v3), (64 + 4)));
 
         sub_0200D5A0(param2->unk_00, &v6, &v7, ((192 + 160) << FX32_SHIFT));
 
@@ -1844,7 +1841,7 @@ static int ov117_022657C4(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_0226
         param2->unk_2C += param2->unk_24;
 
         v8 = ((180 * param2->unk_12) << FX32_SHIFT) / param2->unk_18;
-        v9 = -(FX_Mul(sub_0201D2B8(v8), (12 << FX32_SHIFT))) / FX32_ONE;
+        v9 = -(FX_Mul(CalcSineDegrees_FX32(v8), (12 << FX32_SHIFT))) / FX32_ONE;
 
         sub_0200D500(param2->unk_00, param2->unk_28 / FX32_ONE, param2->unk_2C / FX32_ONE + -24 + v9, ((192 + 160) << FX32_SHIFT));
         sub_0200D34C(param2->unk_00, ((8 + 8 + 12 + 8 + 8) << FX32_SHIFT) / param2->unk_18);
@@ -2012,7 +2009,7 @@ static BOOL ov117_02265C3C(UnkStruct_ov117_02265C3C *param0, UnkStruct_ov117_022
     return 1;
 }
 
-void ov117_02265DB8(BGL *param0, SpriteGfxHandler *param1, UnkStruct_02012744 *param2, UnkStruct_ov117_02265EB0 *param3, const Strbuf *param4, int param5, u32 param6, int param7, int param8, int param9, int param10, int param11, int param12, int param13, int param14)
+void ov117_02265DB8(BgConfig *param0, SpriteGfxHandler *param1, UnkStruct_02012744 *param2, UnkStruct_ov117_02265EB0 *param3, const Strbuf *param4, enum Font param5, TextColor param6, int param7, int param8, int param9, int param10, int param11, int param12, int param13, int param14)
 {
     UnkStruct_020127E8 v0;
     Window v1;
@@ -2023,7 +2020,7 @@ void ov117_02265DB8(BGL *param0, SpriteGfxHandler *param1, UnkStruct_02012744 *p
     int v7 = 0;
 
     {
-        v5 = sub_02002EB4(param5, param4, v7);
+        v5 = Font_CalcMaxLineWidth(param5, param4, v7);
         v6 = v5 / 8;
 
         if (FX_ModS32(v5, 8) != 0) {
@@ -2033,8 +2030,8 @@ void ov117_02265DB8(BGL *param0, SpriteGfxHandler *param1, UnkStruct_02012744 *p
 
     {
         Window_Init(&v1);
-        BGL_AddFramelessWindow(param0, &v1, v6, param14, 0, 0);
-        PrintStringWithColorAndMargins(&v1, param5, param4, 0, 0, 0xff, param6, v7, 0, NULL);
+        Window_AddToTopLeftCorner(param0, &v1, v6, param14, 0, 0);
+        Text_AddPrinterWithParamsColorAndSpacing(&v1, param5, param4, 0, 0, TEXT_SPEED_NO_TRANSFER, param6, v7, 0, NULL);
     }
 
     v3 = sub_02012898(&v1, NNS_G2D_VRAM_TYPE_2DMAIN, 110);
@@ -2066,7 +2063,7 @@ void ov117_02265DB8(BGL *param0, SpriteGfxHandler *param1, UnkStruct_02012744 *p
     }
 
     sub_020128C4(v4, param9, param10);
-    BGL_DeleteWindow(&v1);
+    Window_Remove(&v1);
 
     param3->unk_00 = v4;
     param3->unk_04 = v2;
@@ -2251,7 +2248,7 @@ void ov117_02266150(UnkStruct_ov117_02261280 *param0)
         v0 = MessageLoader_GetNewStrbuf(param0->unk_80, 4 + (v4 % 10));
         v4 /= 10;
         sub_020129A4(param0->unk_15A8.unk_04[v1][0].unk_00, &v2, &v3);
-        ov117_02265DB8(param0->unk_2C, param0->unk_28, param0->unk_90, &param0->unk_15A8.unk_108[v1], v0, 0, (u32)(((0xE & 0xFF) << 0x10) | ((0xF & 0xFF) << 0x8) | ((0x0 & 0xFF) << 0x0)), 0, 10003, v2, 168, 0, 1, 12, 2 * 1);
+        ov117_02265DB8(param0->unk_2C, param0->unk_28, param0->unk_90, &param0->unk_15A8.unk_108[v1], v0, FONT_SYSTEM, TEXT_COLOR(14, 15, 0), 0, 10003, v2, 168, 0, 1, 12, 2 * 1);
         Strbuf_Free(v0);
     }
 }

@@ -3,9 +3,6 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_02006C24_decl.h"
-#include "struct_decls/struct_02018340_decl.h"
-
 #include "overlay063/ov63_0222BCE8.h"
 #include "overlay063/ov63_0222BE18.h"
 #include "overlay063/ov63_0222CA88.h"
@@ -25,15 +22,16 @@
 #include "overlay065/struct_ov65_02236318.h"
 #include "overlay065/struct_ov65_022376D0.h"
 
+#include "bg_window.h"
 #include "cell_actor.h"
 #include "core_sys.h"
+#include "graphics.h"
 #include "heap.h"
+#include "math.h"
+#include "narc.h"
 #include "sprite_resource.h"
-#include "unk_02006E3C.h"
 #include "unk_020093B4.h"
 #include "unk_0200A328.h"
-#include "unk_02018340.h"
-#include "unk_0201D15C.h"
 #include "unk_0201DBEC.h"
 
 #define MCR_PCANM_DESTPL(x) ((7 * 32) + (((x) + 1) * 2))
@@ -67,9 +65,9 @@ static void ov65_022358F8(UnkStruct_ov65_022358CC *param0, u32 param1, NARC *par
 static void ov65_02235900(UnkStruct_ov65_022358CC *param0);
 static void ov65_02235908(UnkStruct_ov65_022358CC *param0, u32 param1);
 static void ov65_02235910(UnkStruct_ov65_022358CC *param0);
-static void ov65_02235918(BGL *param0, u32 param1);
-static void ov65_0223591C(BGL *param0);
-static void ov65_02235920(BGL *param0, u32 param1, NARC *param2);
+static void ov65_02235918(BgConfig *param0, u32 param1);
+static void ov65_0223591C(BgConfig *param0);
+static void ov65_02235920(BgConfig *param0, u32 param1, NARC *param2);
 static BOOL ov65_02235BE8(UnkStruct_ov65_02235130 *param0);
 static void ov65_02235960(UnkStruct_ov65_022358CC *param0, u32 param1, NARC *param2);
 static void ov65_02235A60(UnkStruct_ov65_022358CC *param0);
@@ -129,7 +127,7 @@ static const u16 Unk_ov65_02238BC8[2] = {
     0x2
 };
 
-void ov65_02235060(UnkStruct_ov65_02235130 *param0, u32 param1, NARC *param2, BGL *param3, u32 param4, u32 param5)
+void ov65_02235060(UnkStruct_ov65_02235130 *param0, u32 param1, NARC *param2, BgConfig *param3, u32 param4, u32 param5)
 {
     UnkStruct_ov63_0222CC3C v0;
     u32 v1;
@@ -627,21 +625,21 @@ static void ov65_02235910(UnkStruct_ov65_022358CC *param0)
     ov65_02235B14(param0);
 }
 
-static void ov65_02235918(BGL *param0, u32 param1)
+static void ov65_02235918(BgConfig *param0, u32 param1)
 {
     return;
 }
 
-static void ov65_0223591C(BGL *param0)
+static void ov65_0223591C(BgConfig *param0)
 {
     return;
 }
 
-static void ov65_02235920(BGL *param0, u32 param1, NARC *param2)
+static void ov65_02235920(BgConfig *param0, u32 param1, NARC *param2)
 {
-    sub_02007130(param2, 30, 0, 0, 8 * 32, param1);
-    sub_0201975C(0, 0);
-    sub_020070E8(param2, 29, param0, 0, 0, 0, 0, param1);
+    Graphics_LoadPaletteFromOpenNARC(param2, 30, 0, 0, 8 * 32, param1);
+    Bg_MaskPalette(0, 0);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(param2, 29, param0, 0, 0, 0, 0, param1);
 }
 
 static void ov65_02235960(UnkStruct_ov65_022358CC *param0, u32 param1, NARC *param2)
@@ -941,7 +939,7 @@ static void ov65_02235EF8(UnkStruct_ov65_02235130 *param0, UnkStruct_ov65_022354
     v0.unk_02 = ov63_0222BF90(param1->unk_00, 1);
 
     v1 = v0;
-    v0.unk_02 += FX_Mul(sub_0201D15C(param1->unk_08), -192 * FX32_ONE) >> FX32_SHIFT;
+    v0.unk_02 += FX_Mul(CalcSineDegrees(param1->unk_08), -192 * FX32_ONE) >> FX32_SHIFT;
 
     ov63_0222CFE0(param1->unk_04, v0);
     ov63_0222D060(param1->unk_04, v1);
@@ -962,7 +960,7 @@ static void ov65_02235F94(UnkStruct_ov65_02235130 *param0, UnkStruct_ov65_022354
     if (v3 > 0) {
         v3 = v3 % 6;
         v0 = (180 * v3) / 6;
-        v1.unk_02 -= FX_Mul(sub_0201D15C(v0), 4 * FX32_ONE) >> FX32_SHIFT;
+        v1.unk_02 -= FX_Mul(CalcSineDegrees(v0), 4 * FX32_ONE) >> FX32_SHIFT;
     }
 
     ov63_0222CFE0(param1->unk_04, v1);
@@ -1161,7 +1159,7 @@ static void ov65_022362B0(UnkStruct_ov65_02235130 *param0, UnkStruct_ov65_022363
 {
     memset(param1, 0, sizeof(UnkStruct_ov65_02236318));
 
-    param1->unk_00 = sub_020071EC(param2, 31, &param1->unk_04, param0->unk_04);
+    param1->unk_00 = Graphics_GetPlttDataFromOpenNARC(param2, 31, &param1->unk_04, param0->unk_04);
     param1->unk_08 = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3);
     param1->unk_09 = 0;
     param1->unk_0A = Unk_ov65_02238BC8[param1->unk_09];

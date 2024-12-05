@@ -43,6 +43,9 @@ static void sub_0205EB9C(PlayerAvatar *playerAvatar, u32 param1);
 static void sub_0205EBA4(PlayerAvatar *playerAvatar, u32 param1);
 static u32 sub_0205EBB0(PlayerAvatar *playerAvatar, u32 param1);
 static void PlayerAvatar_SetPlayerData(PlayerAvatar *playerAvatar, PlayerData *param1);
+static u32 GetPlayerForm(PlayerData *player);
+static void SetPlayerForm(PlayerData *player, u32 form);
+static void SetAvatarForm(PlayerAvatar *playerAvatar, u32 form);
 
 PlayerAvatar *PlayerAvatar_Init(const MapObjectManager *mapObjMan, int x, int z, int dir, int param4, int param5, int param6, PlayerData *param7)
 {
@@ -73,12 +76,12 @@ PlayerAvatar *sub_0205E820(const MapObjectManager *mapObjMan, PlayerData *param1
     MapObject *mapObj;
 
     playerAvatar = PlayerAvatar_Alloc();
-    v0 = sub_0205EC94(param1);
+    v0 = GetPlayerForm(param1);
 
     sub_0205E91C(playerAvatar, v0, gender, param1);
     mapObj = sub_0205EA64(mapObjMan);
 
-    sub_0206291C(mapObj, Player_MoveStateFromGender(v0, gender));
+    MapObject_SetGraphicsID(mapObj, Player_MoveStateFromGender(v0, gender));
     MapObject_SetStatusFlagOn(mapObj, MAP_OBJ_STATUS_10 | MAP_OBJ_STATUS_13);
     MapObject_SetStatusFlagOff(mapObj, MAP_OBJ_STATUS_LOCK_DIR | MAP_OBJ_STATUS_PAUSE_ANIMATION);
     sub_02062F90(mapObj, 1);
@@ -152,15 +155,15 @@ static void PlayerAvatar_AddMapObject(PlayerAvatar *playerAvatar, const MapObjec
     MapObject *mapObj = MapObjectMan_AddMapObject(mapObjMan, x, z, dir, param2, 0x1, 1);
     GF_ASSERT(mapObj != NULL);
 
-    MapObject_SetId(mapObj, 0xff);
-    sub_0206294C(mapObj, 0);
-    sub_02062954(mapObj, 0);
-    sub_0206295C(mapObj, 0);
-    sub_020629B4(mapObj, 0, 0);
-    sub_020629B4(mapObj, 0, 1);
-    sub_020629B4(mapObj, 0, 2);
-    sub_020629FC(mapObj, -1);
-    sub_02062A04(mapObj, -1);
+    MapObject_SetLocalID(mapObj, 0xff);
+    MapObject_SetTrainerType(mapObj, 0);
+    MapObject_SetFlag(mapObj, 0);
+    MapObject_SetScript(mapObj, 0);
+    MapObject_SetDataAt(mapObj, 0, 0);
+    MapObject_SetDataAt(mapObj, 0, 1);
+    MapObject_SetDataAt(mapObj, 0, 2);
+    MapObject_SetMovementRangeX(mapObj, -1);
+    MapObject_SetMovementRangeZ(mapObj, -1);
     MapObject_SetStatusFlagOn(mapObj, MAP_OBJ_STATUS_10 | MAP_OBJ_STATUS_13);
     MapObject_SetStatusFlagOff(mapObj, MAP_OBJ_STATUS_LOCK_DIR | MAP_OBJ_STATUS_PAUSE_ANIMATION);
     sub_02062F90(mapObj, 1);
@@ -174,7 +177,7 @@ MapObject *sub_0205EA24(const MapObjectManager *mapObjMan)
     MapObject *mapObj = NULL;
 
     while (sub_020625B0(mapObjMan, &mapObj, &v0, (1 << 0))) {
-        if (MapObject_GetMoveCode(mapObj) == 0x1) {
+        if (MapObject_GetMovementType(mapObj) == 0x1) {
             break;
         }
     }
@@ -192,17 +195,17 @@ static MapObject *sub_0205EA64(const MapObjectManager *mapObjMan)
 
 int PlayerAvatar_GetDir(PlayerAvatar *const playerAvatar)
 {
-    return MapObject_Dir(Player_MapObject(playerAvatar));
+    return MapObject_GetFacingDir(Player_MapObject(playerAvatar));
 }
 
 void Player_SetDir(PlayerAvatar *playerAvatar, int dir)
 {
-    MapObject_SetDir(Player_MapObject(playerAvatar), dir);
+    MapObject_TryFace(Player_MapObject(playerAvatar), dir);
 }
 
 int PlayerAvatar_GetMoveDir(PlayerAvatar *const playerAvatar)
 {
-    return MapObject_GetMoveDir(Player_MapObject(playerAvatar));
+    return MapObject_GetMovingDir(Player_MapObject(playerAvatar));
 }
 
 int sub_0205EAA0(PlayerAvatar *const playerAvatar)
@@ -216,32 +219,32 @@ int sub_0205EAA0(PlayerAvatar *const playerAvatar)
 
 int Player_GetXPos(PlayerAvatar *const playerAvatar)
 {
-    return MapObject_GetXPos(Player_MapObject(playerAvatar));
+    return MapObject_GetX(Player_MapObject(playerAvatar));
 }
 
 int Player_GetZPos(PlayerAvatar *const playerAvatar)
 {
-    return MapObject_GetZPos(Player_MapObject(playerAvatar));
+    return MapObject_GetZ(Player_MapObject(playerAvatar));
 }
 
 int PlayerAvatar_XPosPrev(PlayerAvatar *const playerAvatar)
 {
-    return MapObject_XPosPrev(Player_MapObject(playerAvatar));
+    return MapObject_GetXPrev(Player_MapObject(playerAvatar));
 }
 
 int PlayerAvatar_ZPosPrev(PlayerAvatar *const playerAvatar)
 {
-    return MapObject_ZPosPrev(Player_MapObject(playerAvatar));
+    return MapObject_GetZPrev(Player_MapObject(playerAvatar));
 }
 
 void PlayerAvatar_PosVectorOut(PlayerAvatar *const playerAvatar, VecFx32 *pos)
 {
-    MapObject_PosVectorOut(Player_MapObject(playerAvatar), pos);
+    MapObject_GetPosPtr(Player_MapObject(playerAvatar), pos);
 }
 
 const VecFx32 *PlayerAvatar_PosVector(PlayerAvatar *const playerAvatar)
 {
-    return MapObject_PosVector(PlayerAvatar_ConstMapObject(playerAvatar));
+    return MapObject_GetPos(PlayerAvatar_ConstMapObject(playerAvatar));
 }
 
 void sub_0205EB08(PlayerAvatar *playerAvatar, int param1)
@@ -293,12 +296,12 @@ const MapObject *PlayerAvatar_ConstMapObject(const PlayerAvatar *playerAvatar)
     return playerAvatar->mapObject;
 }
 
-void PlayerAvatar_SetPlayerState(PlayerAvatar *playerAvatar, int param1)
+void PlayerAvatar_SetPlayerState(PlayerAvatar *playerAvatar, int form)
 {
-    GF_ASSERT(param1 < 0x6);
-    playerAvatar->unk_1C = param1;
+    GF_ASSERT(form < 0x6);
+    playerAvatar->unk_1C = form;
 
-    sub_0205ECA8(playerAvatar, param1);
+    SetAvatarForm(playerAvatar, form);
 }
 
 int PlayerAvatar_GetPlayerState(PlayerAvatar *playerAvatar)
@@ -450,7 +453,7 @@ void PlayerData_Init(PlayerData *playerData)
 {
     playerData->unk_00 = 0;
     playerData->runningShoes = FALSE;
-    playerData->unk_04 = 0x0;
+    playerData->form = 0x0;
 }
 
 int PlayerData_HasRunningShoes(PlayerData *playerData)
@@ -501,26 +504,26 @@ int PlayerAvatar_CyclingGear(PlayerAvatar *playerAvatar)
     return PlayerData_CyclingGear(player);
 }
 
-u32 sub_0205EC94(PlayerData *player)
+u32 GetPlayerForm(PlayerData *player)
 {
     if (player != NULL) {
-        return player->unk_04;
+        return player->form;
     }
 
     return 0x0;
 }
 
-void sub_0205ECA0(PlayerData *player, u32 param1)
+void SetPlayerForm(PlayerData *player, u32 form)
 {
     if (player != NULL) {
-        player->unk_04 = param1;
+        player->form = form;
     }
 }
 
-void sub_0205ECA8(PlayerAvatar *playerAvatar, u32 param1)
+void SetAvatarForm(PlayerAvatar *playerAvatar, u32 form)
 {
     PlayerData *player = PlayerAvatar_PlayerData(playerAvatar);
-    sub_0205ECA0(player, param1);
+    SetPlayerForm(player, form);
 }
 
 void sub_0205ECB8(PlayerAvatar *playerAvatar, const VecFx32 *param1, int param2)
@@ -546,9 +549,9 @@ void sub_0205ED0C(PlayerAvatar *playerAvatar, fx32 param1)
     VecFx32 v0;
     MapObject *v1 = Player_MapObject(playerAvatar);
 
-    MapObject_PosVectorOut(v1, &v0);
+    MapObject_GetPosPtr(v1, &v0);
     v0.y = param1;
-    MapObject_SetPosVec(v1, &v0);
+    MapObject_SetPos(v1, &v0);
 }
 
 void sub_0205ED2C(PlayerAvatar *playerAvatar, int param1)

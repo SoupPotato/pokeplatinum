@@ -3,19 +3,18 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_02002F38_decl.h"
-#include "struct_decls/struct_02006C24_decl.h"
 #include "struct_decls/struct_0200C6E4_decl.h"
 #include "struct_decls/struct_0200C704_decl.h"
 #include "struct_defs/sprite_template.h"
 #include "struct_defs/struct_0200D0F4.h"
 
 #include "heap.h"
+#include "math.h"
 #include "narc.h"
+#include "palette.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "unk_0200C6E4.h"
-#include "unk_0201D15C.h"
 
 typedef struct UnkStruct_ov16_0226DEEC_t {
     CellActorData *unk_00;
@@ -174,7 +173,7 @@ static void ov16_0226DFD8(SysTask *param0, void *param1)
         }
 
         if (v0->unk_1C == 0) {
-            v1 = FX_Mul(sub_0201D15C(v0->unk_10 / 100), 14 << FX32_SHIFT) / FX32_ONE;
+            v1 = FX_Mul(CalcSineDegrees(v0->unk_10 / 100), 14 << FX32_SHIFT) / FX32_ONE;
             sub_0200D500(v0->unk_00, v0->unk_08, v0->unk_0C - v1, v0->unk_14);
         }
     }

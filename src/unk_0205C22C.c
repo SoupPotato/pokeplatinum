@@ -18,6 +18,7 @@
 #include "overlay005/ov5_021F134C.h"
 #include "overlay005/ov5_021F600C.h"
 
+#include "field_task.h"
 #include "heap.h"
 #include "map_object.h"
 #include "player_avatar.h"
@@ -30,7 +31,6 @@
 #include "unk_02014A84.h"
 #include "unk_02027F84.h"
 #include "unk_020366A0.h"
-#include "unk_020508D4.h"
 #include "unk_0205B33C.h"
 #include "unk_020655F4.h"
 #include "unk_020711EC.h"
@@ -111,7 +111,7 @@ static void sub_0205C304(SysTask *task, void *param1)
     UnkStruct_0205C22C *v0 = (UnkStruct_0205C22C *)param1;
     UnkStruct_0205B43C *v1 = v0->unk_00;
 
-    if (!sub_020509A4(v0->fieldSystem)) {
+    if (!FieldSystem_IsRunningTask(v0->fieldSystem)) {
         v0->playerAvatar = v0->fieldSystem->playerAvatar;
         sub_0205C44C(v0, v1, v0->fieldSystem->mapObjMan, v0->unk_474);
         sub_0205C51C(v0, v0->fieldSystem->mapObjMan);
@@ -281,8 +281,8 @@ static void sub_0205C51C(UnkStruct_0205C22C *param0, MapObjectManager *param1)
 
                 if ((param0->unk_0C[v1].unk_00 == 1) && (param0->unk_0C[v1].unk_09 == 0)) {
                     MapObject_SetMoveCode(v0, 0x3);
-                    sub_020629FC(v0, 1);
-                    sub_02062A04(v0, 1);
+                    MapObject_SetMovementRangeX(v0, 1);
+                    MapObject_SetMovementRangeZ(v0, 1);
                     param0->unk_0C[v1].unk_09 = 1;
                 }
 
@@ -360,9 +360,9 @@ static void sub_0205C6E0(UnkStruct_0205C680 *param0, MapObject *param1, int para
 {
     int v0, v1, v2;
 
-    v0 = MapObject_XInitial(param1);
-    v1 = MapObject_YInitial(param1);
-    v2 = MapObject_ZInitial(param1);
+    v0 = MapObject_GetXInitial(param1);
+    v1 = MapObject_GetYInitial(param1);
+    v2 = MapObject_GetZInitial(param1);
 
     if ((v0 == param2) && (v2 == param3)) {
         return;
@@ -372,7 +372,7 @@ static void sub_0205C6E0(UnkStruct_0205C680 *param0, MapObject *param1, int para
     sub_02061AD4(param1, param0->unk_08);
     sub_0205C680(param0, 0);
     MapObject_SetPosDir(param1, v0, v1, v2, 1);
-    sub_0206296C(param1, 1);
+    MapObject_Face(param1, 1);
     LocalMapObj_SetAnimationCode(param1, 0x44);
     MapObject_SetHidden(param1, 0);
     sub_02062D80(param1, 1);
@@ -461,7 +461,7 @@ void sub_0205C820(MapObjectManager *mapObjMan, UnkStruct_0205C22C *param1)
                 }
 
                 sub_02061AD4(mapObj, v1->unk_08);
-                sub_0206296C(mapObj, 1);
+                MapObject_Face(mapObj, 1);
                 LocalMapObj_SetAnimationCode(mapObj, 0x44);
                 MapObject_SetHidden(mapObj, 0);
                 sub_02062D80(mapObj, 1);

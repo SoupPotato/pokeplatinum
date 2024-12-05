@@ -11,11 +11,11 @@
 #include "overlay099/struct_ov99_021D2FD4.h"
 #include "overlay099/struct_ov99_021D3A40.h"
 
-#include "unk_02002F38.h"
+#include "bg_window.h"
+#include "math.h"
+#include "palette.h"
 #include "unk_0200A9DC.h"
 #include "unk_0200C6E4.h"
-#include "unk_02018340.h"
-#include "unk_0201D15C.h"
 
 typedef struct {
     s32 unk_00;
@@ -140,8 +140,8 @@ static void ov99_021D2ED8(UnkStruct_ov99_021D2CB0 *param0, UnkStruct_ov99_021D2E
         param1->unk_94[v1].unk_04 = Unk_ov99_021D4BDC[v1].unk_44;
         param1->unk_94[v1].unk_10 = Unk_ov99_021D4BDC[v1].unk_10;
         param1->unk_94[v1].unk_1C = Unk_ov99_021D4BDC[v1].unk_0C;
-        param1->unk_94[v1].unk_28 = FX_Mul(sub_0201D2B8(Unk_ov99_021D4BDC[v1].unk_10), Unk_ov99_021D4BDC[v1].unk_04);
-        param1->unk_94[v1].unk_2C = FX_Mul(sub_0201D2C4(Unk_ov99_021D4BDC[v1].unk_10), Unk_ov99_021D4BDC[v1].unk_08);
+        param1->unk_94[v1].unk_28 = FX_Mul(CalcSineDegrees_FX32(Unk_ov99_021D4BDC[v1].unk_10), Unk_ov99_021D4BDC[v1].unk_04);
+        param1->unk_94[v1].unk_2C = FX_Mul(CalcCosineDegrees_FX32(Unk_ov99_021D4BDC[v1].unk_10), Unk_ov99_021D4BDC[v1].unk_08);
         param1->unk_94[v1].unk_34 = Unk_ov99_021D4BDC[v1].unk_00;
 
         sub_0200D650(param0->unk_10E0[v0], param1->unk_94[v1].unk_00 + param1->unk_94[v1].unk_28, param1->unk_94[v1].unk_04 + param1->unk_94[v1].unk_2C, ((192 + 80) << FX32_SHIFT));
@@ -188,8 +188,8 @@ static void ov99_021D2FD4(UnkStruct_ov99_021D2CB0 *param0, UnkStruct_ov99_021D2E
             v0->unk_39++;
         }
 
-        v0->unk_28 = FX_Mul(sub_0201D2B8(v0->unk_10), v1->unk_04);
-        v0->unk_2C = FX_Mul(sub_0201D2C4(v0->unk_10), v1->unk_08);
+        v0->unk_28 = FX_Mul(CalcSineDegrees_FX32(v0->unk_10), v1->unk_04);
+        v0->unk_2C = FX_Mul(CalcCosineDegrees_FX32(v0->unk_10), v1->unk_08);
         break;
     case 2:
         v0->unk_00 += v0->unk_28;
@@ -211,8 +211,8 @@ static void ov99_021D2FD4(UnkStruct_ov99_021D2CB0 *param0, UnkStruct_ov99_021D2E
             v0->unk_18 -= 360 << FX32_SHIFT;
         }
 
-        v0->unk_28 = FX_Mul(sub_0201D2B8(v0->unk_14), v1->unk_24);
-        v0->unk_2C = FX_Mul(sub_0201D2B8(v0->unk_18), v1->unk_28);
+        v0->unk_28 = FX_Mul(CalcSineDegrees_FX32(v0->unk_14), v1->unk_24);
+        v0->unk_2C = FX_Mul(CalcSineDegrees_FX32(v0->unk_18), v1->unk_28);
 
         if (param0->unk_10FC >= 5970) {
             v0->unk_20 -= v1->unk_2C / 20;
@@ -228,13 +228,13 @@ static void ov99_021D2FD4(UnkStruct_ov99_021D2CB0 *param0, UnkStruct_ov99_021D2E
         v0->unk_04 = v0->unk_04 + v0->unk_2C;
         v0->unk_10 = 0;
         v0->unk_1C = v1->unk_3C;
-        v0->unk_28 = FX_Mul(sub_0201D2B8(0), v1->unk_34);
-        v0->unk_2C = FX_Mul(sub_0201D2C4(0), v1->unk_38);
+        v0->unk_28 = FX_Mul(CalcSineDegrees_FX32(0), v1->unk_34);
+        v0->unk_2C = FX_Mul(CalcCosineDegrees_FX32(0), v1->unk_38);
         v0->unk_39++;
     case 5:
         v0->unk_10 += v0->unk_1C;
-        v0->unk_28 = FX_Mul(sub_0201D2C4(v0->unk_10), v1->unk_34);
-        v0->unk_2C = FX_Mul(sub_0201D2B8(v0->unk_10), v1->unk_38);
+        v0->unk_28 = FX_Mul(CalcCosineDegrees_FX32(v0->unk_10), v1->unk_34);
+        v0->unk_2C = FX_Mul(CalcSineDegrees_FX32(v0->unk_10), v1->unk_38);
 
         if (v0->unk_10 >= (180 << FX32_SHIFT)) {
             v0->unk_39++;
@@ -265,8 +265,8 @@ static void ov99_021D32D8(UnkStruct_ov99_021D2CB0 *param0, UnkStruct_ov99_021D2E
 {
     param1->unk_04 += 0x60;
 
-    sub_02019184(param0->unk_08, 2, 3, param1->unk_04 / FX32_ONE);
-    sub_02019184(param0->unk_08, 7, 3, param1->unk_04 / FX32_ONE);
+    Bg_SetOffset(param0->unk_08, 2, 3, param1->unk_04 / FX32_ONE);
+    Bg_SetOffset(param0->unk_08, 7, 3, param1->unk_04 / FX32_ONE);
 }
 
 static void ov99_021D330C(UnkStruct_ov99_021D2CB0 *param0, UnkStruct_ov99_021D2E28 *param1)
@@ -315,9 +315,9 @@ static void ov99_021D330C(UnkStruct_ov99_021D2CB0 *param0, UnkStruct_ov99_021D2E
         }
     }
 
-    v5 = sub_0200316C(param0->unk_0C, 1);
+    v5 = PaletteData_GetFadedBuffer(param0->unk_0C, 1);
 
     for (v1 = 0; v1 < 16; v1++) {
-        sub_0200393C(&param1->unk_08[v2][v1], &v5[(2 * 16) + v1], 1, v3, param1->unk_08[v4][v1]);
+        BlendPalette(&param1->unk_08[v2][v1], &v5[(2 * 16) + v1], 1, v3, param1->unk_08[v4][v1]);
     }
 }

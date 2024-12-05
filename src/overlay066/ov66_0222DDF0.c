@@ -14,7 +14,6 @@
 #include "struct_decls/struct_02030EC4_decl.h"
 #include "struct_decls/struct_0207E060_decl.h"
 #include "struct_decls/struct_party_decl.h"
-#include "struct_defs/struct_02055BA8.h"
 
 #include "overlay066/ov66_02231428.h"
 #include "overlay066/ov66_0223177C.h"
@@ -43,23 +42,23 @@
 #include "overlay068/struct_ov68_0225DC74.h"
 
 #include "enums.h"
+#include "font.h"
 #include "game_records.h"
 #include "heap.h"
 #include "inlines.h"
 #include "journal.h"
+#include "math.h"
 #include "message.h"
 #include "party.h"
 #include "pokemon.h"
 #include "save_player.h"
 #include "savedata.h"
 #include "strbuf.h"
+#include "system_data.h"
 #include "trainer_info.h"
-#include "unk_02002B7C.h"
 #include "unk_020041CC.h"
 #include "unk_02005474.h"
 #include "unk_02014D38.h"
-#include "unk_0201D15C.h"
-#include "unk_02025CB0.h"
 #include "unk_0202631C.h"
 #include "unk_0202C858.h"
 #include "unk_02030EA4.h"
@@ -1002,7 +1001,7 @@ void ov66_0222E640(const UnkStruct_ov66_0222E71C *param0, TrainerInfo *param1, u
             v3 = Strbuf_Init((7 + 1) * 4, param2);
             v2 = Strbuf_Init((7 + 1) * 4, param2);
             TrainerInfo_NameStrbuf(param1, v2);
-            v0 = sub_02002DB4(0, v2, v3);
+            v0 = Font_AreAllCharsValid(FONT_SYSTEM, v2, v3);
 
             if (v0 == 0) {
                 v1 = 1;
@@ -2312,14 +2311,14 @@ static void ov66_0222F7C8(UnkStruct_ov66_0222F6C4 *param0, SaveData *param1, u32
     Party *v1;
     UnkStruct_0202C878 *v2;
     PokedexData *v3;
-    UnkStruct_02055BA8 *v4;
+    GameTime *v4;
 
     {
         v0 = SaveData_GetTrainerInfo(param1);
         v1 = Party_GetFromSavedata(param1);
         v3 = SaveData_Pokedex(param1);
         v2 = sub_0202C878(param1);
-        v4 = sub_02025CD8(param1);
+        v4 = SaveData_GetGameTime(param1);
     }
 
     {
@@ -2360,12 +2359,12 @@ static void ov66_0222F7C8(UnkStruct_ov66_0222F6C4 *param0, SaveData *param1, u32
     param0->unk_20.unk_3A = ov66_02230C0C(param0->unk_20.unk_3A);
     param0->unk_20.unk_3C = sub_0202C8C0(v2);
     param0->unk_20.unk_3E = sub_0202C8C4(v2);
-    param0->unk_20.unk_3F = sub_02027474(v3);
+    param0->unk_20.unk_3F = Pokedex_IsNationalDexObtained(v3);
     param0->unk_20.unk_40 = TrainerInfo_IsMainStoryCleared(v0);
     param0->unk_20.unk_41 = 0xff;
     param0->unk_20.unk_43 = 0;
     param0->unk_20.unk_42 = GAME_VERSION;
-    param0->unk_20.unk_44 = v4->unk_24;
+    param0->unk_20.unk_44 = v4->startTimestamp;
 
     {
         int v9;

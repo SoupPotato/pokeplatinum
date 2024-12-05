@@ -10,10 +10,10 @@
 
 #include "map_header_data.h"
 #include "map_object.h"
+#include "map_tile_behavior.h"
 #include "player_avatar.h"
 #include "script_manager.h"
 #include "unk_02054D00.h"
-#include "unk_0205DAC8.h"
 
 static u8 sub_0203CB18(FieldSystem *fieldSystem, const BgEvent *param1);
 static u8 sub_0203CAEC(FieldSystem *fieldSystem, const BgEvent *param1);
@@ -61,9 +61,9 @@ void sub_0203C9D4(FieldSystem *fieldSystem, MapObject **param1)
     u8 v3;
 
     v2 = sub_0203C954(fieldSystem, &v0, &v1);
-    v3 = sub_02054F94(fieldSystem, v0, v1);
+    v3 = FieldSystem_GetTileBehavior(fieldSystem, v0, v1);
 
-    if (sub_0205DAE0(v3) == 1) {
+    if (TileBehavior_IsTable(v3) == 1) {
         switch (v2) {
         case 0:
             v1 -= 1;
@@ -194,7 +194,7 @@ u8 sub_0203CBE0(FieldSystem *fieldSystem, MapObject **param1)
     }
 
     if (sub_0203CA40(fieldSystem, param1) == 1) {
-        u32 v0 = sub_02062920(*param1);
+        u32 v0 = MapObject_GetGraphicsID(*param1);
 
         if ((v0 == 0x5b) || (v0 == 0x5c) || (v0 == 0x5d) || (v0 == 0x5e) || (v0 == 0x5f) || (v0 == 0x60)) {
             return 1;

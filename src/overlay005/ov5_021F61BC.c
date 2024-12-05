@@ -15,9 +15,9 @@
 
 #include "map_object.h"
 #include "map_object_move.h"
+#include "map_tile_behavior.h"
 #include "player_avatar.h"
 #include "unk_0201E190.h"
-#include "unk_0205DAC8.h"
 #include "unk_020711EC.h"
 #include "unk_02073838.h"
 
@@ -115,7 +115,7 @@ static int ov5_021F6264(UnkStruct_ov101_021D5D90 *param0, void *param1)
     v1 = Player_MapObject(v2->playerAvatar);
 
     v0->unk_04 = -1;
-    v0->unk_14 = MapObject_Id(v1);
+    v0->unk_14 = MapObject_GetLocalID(v1);
     v0->unk_18 = sub_02062918(v1);
 
     return 1;
@@ -158,11 +158,11 @@ static void ov5_021F62A0(UnkStruct_ov101_021D5D90 *param0, void *param1)
 
     {
         VecFx32 v4, v5;
-        int v6 = MapObject_GetXPos(v3) + MapObject_GetDxFromDir(v1->unk_04);
-        int v7 = MapObject_GetZPos(v3) + MapObject_GetDyFromDir(v1->unk_04);
+        int v6 = MapObject_GetX(v3) + MapObject_GetDxFromDir(v1->unk_04);
+        int v7 = MapObject_GetZ(v3) + MapObject_GetDyFromDir(v1->unk_04);
 
         sub_02064450(v6, v7, &v5);
-        MapObject_PosVectorOut(v3, &v4);
+        MapObject_GetPosPtr(v3, &v4);
         v5.y = v4.y;
         sub_020715D4(param0, &v5);
     }
@@ -220,19 +220,19 @@ static void ov5_021F636C(UnkStruct_ov101_021D5D90 *param0, void *param1)
 
 static int ov5_021F6414(u8 param0)
 {
-    if (sub_0205DB10(param0)) {
+    if (TileBehavior_IsWarpEntranceNorth(param0)) {
         return 0;
     }
 
-    if (sub_0205DB1C(param0)) {
+    if (TileBehavior_IsWarpEntranceSouth(param0)) {
         return 1;
     }
 
-    if (sub_0205DB04(param0)) {
+    if (TileBehavior_IsWarpEntranceWest(param0)) {
         return 2;
     }
 
-    if (sub_0205DAF8(param0)) {
+    if (TileBehavior_IsWarpEntranceEast(param0)) {
         return 3;
     }
 

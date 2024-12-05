@@ -21,37 +21,76 @@ typedef struct {
     PMiLoadedOverlay unk_80[8];
 } UnkStruct_021BF370;
 
-static void FreeOverlayAllocation(PMiLoadedOverlay *param0);
-static BOOL CanOverlayBeLoaded(const FSOverlayID param0);
+static void FreeOverlayAllocation(PMiLoadedOverlay *loadedOverlays);
+static BOOL CanOverlayBeLoaded(const FSOverlayID overlayID);
 static PMiLoadedOverlay *GetLoadedOverlaysInRegion(int param0);
-static BOOL GetOverlayRamBounds(const FSOverlayID param0, u32 *param1, u32 *param2);
+static BOOL GetOverlayRamBounds(const FSOverlayID overlayID, u32 *param1, u32 *param2);
 static BOOL LoadOverlayNormal(MIProcessor param0, FSOverlayID param1);
 static BOOL LoadOverlayNoInit(MIProcessor param0, FSOverlayID param1);
 static BOOL LoadOverlayNoInitAsync(MIProcessor param0, FSOverlayID param1);
-void Overlay_UnloadByID(const FSOverlayID param0);
-int Overlay_GetLoadDestination(const FSOverlayID param0);
-BOOL Overlay_LoadByID(const FSOverlayID param0, int param1);
 
 static UnkStruct_021BF370 Unk_021BF370;
 
-static void FreeOverlayAllocation(PMiLoadedOverlay *param0)
-{
-    GF_ASSERT(param0->isActive == 1);
-    GF_ASSERT(FS_UnloadOverlay(MI_PROCESSOR_ARM9, param0->id) == TRUE);
+#ifdef GDB_DEBUGGING
 
-    param0->isActive = 0;
+/* Added to support GDB overlay debugging. */
+unsigned long _novlys = MAX_OVERLAYS;
+struct_overlayTable _ovly_table[MAX_OVERLAYS] = {};
+// this does nothing, but needs to be defined for GDB to refresh overlay state automatically.
+static void _ovly_debug_event(void)
+{
+}
+
+// helper function to mark a specific overlay as unmapped.
+void UnloadOverlayGDB(const FSOverlayID overlayID)
+{
+    GF_ASSERT(overlayID < _novlys);
+    _ovly_table[overlayID].mapped--;
+    _ovly_debug_event();
+}
+// helper function to mark a specific overlay as mapped, and provide its RAM address and size to GDB.
+void LoadOverlayGDB(const FSOverlayID overlayID)
+{
+    FSOverlayInfo overlayInfo;
+
+    GF_ASSERT(overlayID < _novlys);
+
+    // 1. fetch overlay info to identify vma
+    GF_ASSERT(FS_LoadOverlayInfo(&overlayInfo, MI_PROCESSOR_ARM9, overlayID) == TRUE);
+
+    // 2. add entry to _ovly_table
+    // note that this is a little hacky. the VMA is correct but the LMA is not exposed by the OverlayManager
+    // and the size field is not correct compared to what's stored in the NEF.
+    // the standard overlay manager in GDB bases comparisons on VMA and LMA, so it's not viable here.
+    // requires a custom GDB build which maps based on section ID and can override section size.
+    // see https://github.com/joshua-smith-12/binutils-gdb-nds
+    _ovly_table[overlayID].vma = overlayInfo.header.ram_address;
+    _ovly_table[overlayID].id = overlayID;
+    _ovly_table[overlayID].size = overlayInfo.header.ram_size;
+    _ovly_table[overlayID].mapped++;
+    _ovly_debug_event();
+}
+#endif // GDB_DEBUGGING
+
+static void FreeOverlayAllocation(PMiLoadedOverlay *loadedOverlays)
+{
+    GF_ASSERT(loadedOverlays->isActive == TRUE);
+    GF_ASSERT(FS_UnloadOverlay(MI_PROCESSOR_ARM9, loadedOverlays->id) == TRUE);
+
+    loadedOverlays->isActive = FALSE;
 }
 
 void Overlay_UnloadByID(const FSOverlayID overlayID)
 {
-    PMiLoadedOverlay *table;
+    PMiLoadedOverlay *loadedOverlays = GetLoadedOverlaysInRegion(Overlay_GetLoadDestination(overlayID));
     int i;
 
-    table = GetLoadedOverlaysInRegion(Overlay_GetLoadDestination(overlayID));
-
     for (i = 0; i < 8; i++) {
-        if ((table[i].isActive == 1) && (table[i].id == overlayID)) {
-            FreeOverlayAllocation(&table[i]);
+        if (loadedOverlays[i].isActive == TRUE && loadedOverlays[i].id == overlayID) {
+            FreeOverlayAllocation(&loadedOverlays[i]);
+#ifdef GDB_DEBUGGING
+            UnloadOverlayGDB(overlayID);
+#endif
             return;
         }
     }
@@ -74,7 +113,7 @@ int Overlay_GetLoadDestination(const FSOverlayID overlayID)
     return OVERLAY_REGION_MAIN;
 }
 
-BOOL Overlay_LoadByID(const FSOverlayID overlayID, int loadType)
+BOOL Overlay_LoadByID(const FSOverlayID overlayID, enum OverlayLoadType loadType)
 {
     BOOL result;
     u32 dmaBak = FS_DMA_NOT_USE;
@@ -99,11 +138,11 @@ BOOL Overlay_LoadByID(const FSOverlayID overlayID, int loadType)
     }
 
     if (i >= 8) {
-        GF_ASSERT(0);
+        GF_ASSERT(FALSE);
         return FALSE;
     }
 
-    if ((overlayRegion == 1) || (overlayRegion == 2)) {
+    if (overlayRegion == OVERLAY_REGION_ITCM || overlayRegion == OVERLAY_REGION_DTCM) {
         dmaBak = FS_SetDefaultDMA(FS_DMA_NOT_USE);
     }
 
@@ -122,32 +161,32 @@ BOOL Overlay_LoadByID(const FSOverlayID overlayID, int loadType)
         return 0;
     }
 
-    if ((overlayRegion == 1) || (overlayRegion == 2)) {
+    if (overlayRegion == OVERLAY_REGION_ITCM || overlayRegion == OVERLAY_REGION_DTCM) {
         FS_SetDefaultDMA(dmaBak);
     }
 
-    if (result == 0) {
-        GF_ASSERT(0);
-        return 0;
-    }
-
-    return 1;
-}
-
-static BOOL CanOverlayBeLoaded(const FSOverlayID param0)
-{
-    u32 myStart, myEnd, theirStart, theirEnd;
-    PMiLoadedOverlay *loadedOverlay;
-    int i;
-
-    if (!GetOverlayRamBounds(param0, &myStart, &myEnd)) {
+    if (result == FALSE) {
+        GF_ASSERT(FALSE);
         return FALSE;
     }
 
-    loadedOverlay = GetLoadedOverlaysInRegion(Overlay_GetLoadDestination(param0));
+    return TRUE;
+}
+
+static BOOL CanOverlayBeLoaded(const FSOverlayID overlayID)
+{
+    u32 myStart, myEnd, theirStart, theirEnd;
+    PMiLoadedOverlay *loadedOverlays;
+    int i;
+
+    if (!GetOverlayRamBounds(overlayID, &myStart, &myEnd)) {
+        return FALSE;
+    }
+
+    loadedOverlays = GetLoadedOverlaysInRegion(Overlay_GetLoadDestination(overlayID));
 
     for (i = 0; i < 8; i++) {
-        if (loadedOverlay[i].isActive == TRUE && GetOverlayRamBounds(loadedOverlay[i].id, &theirStart, &theirEnd) == TRUE) {
+        if (loadedOverlays[i].isActive == TRUE && GetOverlayRamBounds(loadedOverlays[i].id, &theirStart, &theirEnd) == TRUE) {
             if (((myStart >= theirStart) && (myStart < theirEnd)) || ((myEnd > theirStart) && (myEnd <= theirEnd)) || ((myStart <= theirStart) && (myEnd >= theirEnd))) {
                 GF_ASSERT(0);
                 return FALSE;
@@ -195,6 +234,9 @@ static BOOL GetOverlayRamBounds(const FSOverlayID overlayID, u32 *start, u32 *en
 
 static BOOL LoadOverlayNormal(MIProcessor proc, FSOverlayID overlayID)
 {
+#ifdef GDB_DEBUGGING
+    LoadOverlayGDB(overlayID);
+#endif
     return FS_LoadOverlay(proc, overlayID);
 }
 
@@ -210,6 +252,10 @@ static BOOL LoadOverlayNoInit(MIProcessor proc, FSOverlayID overlayID)
         return FALSE;
     }
 
+#ifdef GDB_DEBUGGING
+    LoadOverlayGDB(overlayID);
+#endif
+
     FS_StartOverlay(&info);
     return TRUE;
 }
@@ -222,6 +268,10 @@ static BOOL LoadOverlayNoInitAsync(MIProcessor proc, FSOverlayID overlayID)
     if (!FS_LoadOverlayInfo(&info, proc, overlayID)) {
         return FALSE;
     }
+
+#ifdef GDB_DEBUGGING
+    LoadOverlayGDB(overlayID);
+#endif
 
     FS_InitFile(&file);
     FS_LoadOverlayImageAsync(&info, &file);
