@@ -1,4 +1,7 @@
 #include "macros/scrcmd.inc"
+#include "generated/distribution_events.h"
+#include "generated/tutor_locations.h"
+#include "res/text/bank/common_strings.h"
 
     .data
 
@@ -60,7 +63,7 @@
     ScriptEntry _15CB
     ScriptEntry _15D7
     ScriptEntry _170A
-    .short 0xFD13
+    ScriptEntryEnd
 
 _00EA:
     End
@@ -84,9 +87,9 @@ _00EE:
     SetVar 0x8004, 0
 _0141:
     MessageVar 0x8004
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _0172
-    GoToIfEq 0x800C, 1, _0165
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _0172
+    GoToIfEq 0x800C, MENU_NO, _0165
     End
 
 _0165:
@@ -100,7 +103,7 @@ _0165:
 _0172:
     SetPlayerState 0x100
     ChangePlayerState
-    ApplyMovement 0xFF, _02EC
+    ApplyMovement LOCALID_PLAYER, _02EC
     WaitMovement
     ScrCmd_2BE 0x800C
     CallIfGe 0x800C, 4, _01BC
@@ -130,7 +133,7 @@ _01C1:
 _01E1:
     GoToIfEq 0x8004, 1, _0218
     Message 2
-    ApplyMovement 0xFF, _02F4
+    ApplyMovement LOCALID_PLAYER, _02F4
     WaitMovement
     SetPlayerState 1
     ChangePlayerState
@@ -145,7 +148,7 @@ _01E1:
 
 _0218:
     Message 8
-    ApplyMovement 0xFF, _02F4
+    ApplyMovement LOCALID_PLAYER, _02F4
     WaitMovement
     SetPlayerState 1
     ChangePlayerState
@@ -165,7 +168,7 @@ _0242:
 
 _0259:
     SetFlag 106
-    ApplyMovement 0xFF, _02F4
+    ApplyMovement LOCALID_PLAYER, _02F4
     WaitMovement
     SetPlayerState 1
     ChangePlayerState
@@ -182,8 +185,8 @@ _027A:
     Message 4
     BufferPlayerName 0
     Message 5
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _02D4
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _02D4
     Message 9
     WaitABXPadPress
     CloseMessage
@@ -194,8 +197,8 @@ _027A:
 _02B0:
     BufferPlayerName 0
     Message 6
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _02D4
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _02D4
     Message 9
     WaitABXPadPress
     CloseMessage
@@ -209,18 +212,18 @@ _02D4:
 
     .balign 4, 0
 _02E0:
-    MoveAction_064
-    MoveAction_03E
+    MoveAction_100
+    MoveAction_062
     EndMovement
 
     .balign 4, 0
 _02EC:
-    MoveAction_066
+    MoveAction_102
     EndMovement
 
     .balign 4, 0
 _02F4:
-    MoveAction_068
+    MoveAction_104
     EndMovement
 
 _02FC:
@@ -254,14 +257,14 @@ _034C:
 _0356:
     GetItemPocket 0x8004, 0x800C
     SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 7, _03D8
-    GoToIfEq 0x8008, 0, _03CC
-    GoToIfEq 0x8008, 4, _03CC
-    GoToIfEq 0x8008, 1, _03CC
-    GoToIfEq 0x8008, 2, _03CC
-    GoToIfEq 0x8008, 6, _03CC
-    GoToIfEq 0x8008, 5, _03DE
-    GoToIfEq 0x8008, 3, _03D2
+    GoToIfEq 0x8008, POCKET_KEY_ITEMS, _03D8
+    GoToIfEq 0x8008, POCKET_ITEMS, _03CC
+    GoToIfEq 0x8008, POCKET_BERRIES, _03CC
+    GoToIfEq 0x8008, POCKET_MEDICINE, _03CC
+    GoToIfEq 0x8008, POCKET_BALLS, _03CC
+    GoToIfEq 0x8008, POCKET_BATTLE_ITEMS, _03CC
+    GoToIfEq 0x8008, POCKET_MAIL, _03DE
+    GoToIfEq 0x8008, POCKET_TMHMS, _03D2
     End
 
 _03CC:
@@ -348,8 +351,8 @@ _04A8:
     GoToIfEq 0x800C, SAVE_TYPE_OVERWRITE, _04FC
     ScrCmd_2C1
     Message 13
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, SAVE_TYPE_NO_DATA_EXISTS, _05A0
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_NO, _05A0
     CheckSaveType 0x800C
     GoToIfEq 0x800C, SAVE_TYPE_NO_DATA_EXISTS, _051D
     GoToIfEq 0x800C, SAVE_TYPE_FULL_SAVE, _0509
@@ -364,16 +367,16 @@ _04FC:
 
 _0509:
     Message 14
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 1, _05A0
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_NO, _05A0
 _051D:
     Message 21
     GoTo _0552
 
 _0526:
     Message 14
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 1, _05A0
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_NO, _05A0
     GoToIfUnset 31, _05C6
     GoToIfSet 31, _05D1
     End
@@ -439,17 +442,17 @@ _05EA:
     LockAll
     CheckItem ITEM_HONEY, 1, 0x800C
     GoToIfNe 0x800C, 0, _0632
-    ScrCmd_128 0x800C
-    GoToIfEq 0x800C, 1, _065F
-    GoToIfEq 0x800C, 2, _066A
-    GoToIfEq 0x800C, 3, _06F4
+    GetHoneyTreeStatus 0x800C
+    GoToIfEq 0x800C, TREE_STATUS_BARE, _065F
+    GoToIfEq 0x800C, TREE_STATUS_SLATHERED, _066A
+    GoToIfEq 0x800C, TREE_STATUS_ENCOUNTER, _06F4
     End
 
 _0632:
-    ScrCmd_128 0x800C
-    GoToIfEq 0x800C, 1, _0675
-    GoToIfEq 0x800C, 2, _067E
-    GoToIfEq 0x800C, 3, _06F4
+    GetHoneyTreeStatus 0x800C
+    GoToIfEq 0x800C, TREE_STATUS_BARE, _0675
+    GoToIfEq 0x800C, TREE_STATUS_SLATHERED, _067E
+    GoToIfEq 0x800C, TREE_STATUS_ENCOUNTER, _06F4
     End
 
 _065F:
@@ -510,16 +513,16 @@ _06A2:
 
 _06BB:
     Message 50
-    ScrCmd_03E 0x800C
+    ShowYesNoMenu 0x800C
     CloseMessage
-    GoToIfEq 0x800C, 0, _06D5
+    GoToIfEq 0x800C, MENU_YES, _06D5
     ReleaseAll
     End
 
 _06D5:
     RemoveItem ITEM_HONEY, 1, 0x800C
     ScrCmd_260 1
-    ScrCmd_127
+    SlatherHoneyTree
     WaitTime 10, 0x800C
     Message 51
     WaitABXPadPress
@@ -531,12 +534,12 @@ _06F4:
     IncrementGameRecord RECORD_UNK_117
     StartHoneyTreeBattle
     CheckWonBattle 0x800C
-    GoToIfEq 0x800C, 0, _0713
+    GoToIfEq 0x800C, FALSE, _0713
     ScrCmd_12A
     GoTo _06A2
 
 _0713:
-    ScrCmd_0EB
+    BlackOutFromBattle
     ReleaseAll
     End
 
@@ -787,8 +790,8 @@ _09FF:
     Call _0356
     AddItem 0x8004, 0x8005, 0x800C
     GetItemPocket 0x8004, 0x800C
-    CallIfEq 0x800C, 7, _0A71
-    CallIfNe 0x800C, 7, _0A82
+    CallIfEq 0x800C, POCKET_KEY_ITEMS, _0A71
+    CallIfNe 0x800C, POCKET_KEY_ITEMS, _0A82
     Message 30
     WaitABXPadPress
     Return
@@ -802,8 +805,8 @@ _0A3E:
     Call _0356
     AddItem 0x8004, 0x8005, 0x800C
     GetItemPocket 0x8004, 0x800C
-    CallIfEq 0x800C, 7, _0A71
-    CallIfNe 0x800C, 7, _0A82
+    CallIfEq 0x800C, POCKET_KEY_ITEMS, _0A71
+    CallIfNe 0x800C, POCKET_KEY_ITEMS, _0A82
     Message 126
     Return
 
@@ -838,14 +841,14 @@ _0AD8:
 _0ADD:
     GetItemPocket 0x8004, 0x800C
     SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 7, _0B64
-    GoToIfEq 0x8008, 0, _0B53
-    GoToIfEq 0x8008, 4, _0BA8
-    GoToIfEq 0x8008, 1, _0B97
-    GoToIfEq 0x8008, 2, _0BB9
-    GoToIfEq 0x8008, 6, _0B75
-    GoToIfEq 0x8008, 5, _0B86
-    GoToIfEq 0x8008, 3, _0BCA
+    GoToIfEq 0x8008, POCKET_KEY_ITEMS, _0B64
+    GoToIfEq 0x8008, POCKET_ITEMS, _0B53
+    GoToIfEq 0x8008, POCKET_BERRIES, _0BA8
+    GoToIfEq 0x8008, POCKET_MEDICINE, _0B97
+    GoToIfEq 0x8008, POCKET_BALLS, _0BB9
+    GoToIfEq 0x8008, POCKET_BATTLE_ITEMS, _0B75
+    GoToIfEq 0x8008, POCKET_MAIL, _0B86
+    GoToIfEq 0x8008, POCKET_TMHMS, _0BCA
     End
 
 _0B53:
@@ -1006,35 +1009,35 @@ _0DC2:
     CloseMessage
     Call _0F94
     ScrCmd_0AB 0
-    ScrCmd_0A1
+    ReturnToField
     GoTo _0E21
 
 _0DD5:
     CloseMessage
     Call _0F94
     ScrCmd_0AB 1
-    ScrCmd_0A1
+    ReturnToField
     GoTo _0E21
 
 _0DE8:
     CloseMessage
     Call _0F94
     ScrCmd_0AB 2
-    ScrCmd_0A1
+    ReturnToField
     GoTo _0E21
 
 _0DFB:
     CloseMessage
     Call _0F94
     ScrCmd_0AB 3
-    ScrCmd_0A1
+    ReturnToField
     GoTo _0E21
 
 _0E0E:
     CloseMessage
     Call _0F94
     ScrCmd_0AB 4
-    ScrCmd_0A1
+    ReturnToField
     GoTo _0E21
 
 _0E21:
@@ -1114,7 +1117,7 @@ _0F2C:
     GoToIfEq 0x800C, 1, _0F59
     Call _0F94
     ScrCmd_0B1
-    ScrCmd_0A1
+    ReturnToField
     Call _0F80
     GoTo _0C1C
 
@@ -1164,7 +1167,7 @@ _0FC3:
 
 _0FCA:
     LockAll
-    ApplyMovement 0xFF, _1250
+    ApplyMovement LOCALID_PLAYER, _1250
     ApplyMovement 0, _1258
     WaitMovement
     FadeScreen 6, 1, 1, 0
@@ -1200,7 +1203,7 @@ _103A:
     WaitFadeScreen
     SetPlayerState 0x100
     ChangePlayerState
-    ApplyMovement 0xFF, _02EC
+    ApplyMovement LOCALID_PLAYER, _02EC
     WaitMovement
     Message 43
     Call _10C7
@@ -1208,7 +1211,7 @@ _103A:
     CheckBadgeAcquired BADGE_ID_COAL, 0x800C
     GoToIfEq 0x800C, 1, _10A2
     Message 44
-    ApplyMovement 0xFF, _02F4
+    ApplyMovement LOCALID_PLAYER, _02F4
     WaitMovement
     SetPlayerState 1
     ChangePlayerState
@@ -1221,7 +1224,7 @@ _103A:
     End
 
 _10A2:
-    ApplyMovement 0xFF, _02F4
+    ApplyMovement LOCALID_PLAYER, _02F4
     WaitMovement
     SetPlayerState 1
     ChangePlayerState
@@ -1234,7 +1237,7 @@ _10A2:
     End
 
 _10C7:
-    ScrCmd_201 0x8004
+    GetCurrentMapID 0x8004
     GoToIfEq 0x8004, 6, _11BD
     GoToIfEq 0x8004, 36, _11C5
     GoToIfEq 0x8004, 48, _11CD
@@ -1374,7 +1377,7 @@ _1282:
     FadeScreen 6, 1, 0, 0
     WaitFadeScreen
     ScrCmd_205
-    ScrCmd_0A1
+    ReturnToField
     FadeScreen 6, 1, 1, 0
     WaitFadeScreen
     ReleaseAll
@@ -1426,20 +1429,20 @@ _12F3:
     LockAll
     PlayFanfare SEQ_SE_CONFIRM
     CheckPlayerOnBike 0x800C
-    GoToIfEq 0x800C, 1, _133C
+    GoToIfEq 0x800C, TRUE, _133C
     Message 73
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 1, _1359
-    SetPlayerBike 1
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_NO, _1359
+    SetPlayerBike TRUE
     CloseMessage
     ReleaseAll
     End
 
 _133C:
     Message 74
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 1, _1359
-    SetPlayerBike 0
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_NO, _1359
+    SetPlayerBike FALSE
     CloseMessage
     ReleaseAll
     End
@@ -1552,7 +1555,7 @@ _1475:
 
 _1477:
     LockAll
-    ScrCmd_201 0x8004
+    GetCurrentMapID 0x8004
     GoToIfEq 0x8004, 220, _14AC
     GoToIfEq 0x8004, 0x248, _14AC
     GoToIfEq 0x8004, 0x249, _14AC
@@ -1564,16 +1567,16 @@ _14AC:
     GoToIfNe 0x8004, 31, _1570
     GoToIfNe 0x8005, 52, _1570
     CheckGameCompleted 0x4000
-    GoToIfEq 0x4000, 0, _1570
+    GoToIfEq 0x4000, FALSE, _1570
     ScrCmd_22D 2, 0x4000
     GoToIfEq 0x4000, 0, _1570
-    ScrCmd_28B 2, 0x4000
-    GoToIfEq 0x4000, 0, _1570
+    CheckDistributionEvent DISTRIBUTION_EVENT_ARCEUS, 0x4000
+    GoToIfEq 0x4000, FALSE, _1570
     GoToIfSet 0x11E, _1570
     BufferPlayerName 0
     Message 122
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 1, _157B
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_NO, _157B
     BufferPlayerName 0
     Message 123
     CloseMessage
@@ -1607,8 +1610,8 @@ _157B:
 _1581:
     StopMusic 0
     GetPlayerGender 0x800C
-    CallIfEq 0x800C, 0, _15A7
-    CallIfEq 0x800C, 1, _15AD
+    CallIfEq 0x800C, GENDER_MALE, _15A7
+    CallIfEq 0x800C, GENDER_FEMALE, _15AD
     ReturnCommonScript
     End
 
@@ -1652,14 +1655,14 @@ _15E7:
     SetVar 0x8004, 0x800C
     ScrCmd_2F6 0x8005, 0x8004, 0x800C
     GoToIfEq 0x800C, 0, _1624
-    ScrCmd_0A1
+    ReturnToField
     FadeScreen 6, 1, 1, 0
     WaitFadeScreen
     ReturnCommonScript
     End
 
 _1624:
-    ScrCmd_0A1
+    ReturnToField
     FadeScreen 6, 1, 1, 0
     WaitFadeScreen
     ReturnCommonScript
@@ -1668,32 +1671,32 @@ _1624:
 _1636:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    SetVar 0x8004, 0
+    SetVar 0x8004, TUTOR_LOCATION_ROUTE_212
     GoTo _1672
     End
 
 _164A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    SetVar 0x8004, 1
+    SetVar 0x8004, TUTOR_LOCATION_SURVIVAL_AREA
     GoTo _1672
     End
 
 _165E:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    SetVar 0x8004, 2
+    SetVar 0x8004, TUTOR_LOCATION_SNOWPOINT_CITY
     GoTo _1672
     End
 
 _1672:
     Message 129
-    ScrCmd_2E6 0xFF, 0x8004, 0x800C
+    ShowMoveTutorMoveSelectionMenu 0xFF, 0x8004, 0x800C
     SetVar 0x8003, 0x800C
     GoToIfEq 0x8003, -2, _16A4
-    ScrCmd_2EC 21, 1, 0x8003, 0x800C
+    ShowShardsCost 21, 1, 0x8003, 0x800C
     WaitABPress
-    ScrCmd_2ED
+    CloseShardsCostWindow
     GoTo _16A4
     End
 

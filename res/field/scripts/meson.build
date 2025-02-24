@@ -405,7 +405,7 @@ scr_seq_files = files(
     'scripts_unk_0397.s',
     'scripts_communication_club_colosseum_2p.s',
     'scripts_communication_club_colosseum_4p.s',
-    'scripts_unk_0400.s',
+    'scripts_pokemon_center_daily_trainers.s',
     'scripts_empty.s',
     'scripts_unk_0402.s',
     'scripts_unk_0403.s',
@@ -417,7 +417,7 @@ scr_seq_files = files(
     'scripts_unk_0409.s',
     'scripts_wifi_plaza_entrance.s',
     'scripts_unk_0411.s',
-    'scripts_unk_0412.s',
+    'scripts_init_new_game.s',
     'scripts_unk_0413.s',
     'scripts_verity_lakefront.s',
     'scripts_verity_lakefront_unknown_house.s',
@@ -1138,21 +1138,18 @@ scr_seq_narc = custom_target('scr_seq.narc',
         'scr_seq.narc',
         'scr_seq.naix',
     ],
-    input: s_to_bin_gen.process(
+    input: script_bin_gen.process(
         scr_seq_files,
-        extra_args: ['--out-dir', scr_seq_private_dir]
+        extra_args: ['--depfile', '--out-dir', scr_seq_private_dir]
     ),
     command: [
-        knarc_exe,
-        '-d', '@PRIVATE_DIR@',
-        '-p', '@OUTPUT0@',
-        '-o', scr_seq_narc_order,
-        '-n'
-    ],
-    depends: [
-        trdata_narc,
+        narc_exe, 'create',
+        '--naix',
+        '--order', scr_seq_narc_order,
+        '--output', '@OUTPUT0@',
+        '@PRIVATE_DIR@',
     ],
 )
 
-nitrofs_files += scr_seq_narc[0]
+nitrofs_files += scr_seq_narc
 naix_headers += scr_seq_narc[1]

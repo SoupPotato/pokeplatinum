@@ -1,11 +1,12 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/flower_shop.h"
 
     .data
 
     ScriptEntry _000E
     ScriptEntry _006E
     ScriptEntry _00A9
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000E:
     PlayFanfare SEQ_SE_CONFIRM

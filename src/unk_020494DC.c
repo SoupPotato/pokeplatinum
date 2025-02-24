@@ -3,7 +3,7 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "consts/game_records.h"
+#include "generated/game_records.h"
 
 #include "struct_defs/struct_02049A68.h"
 #include "struct_defs/struct_0204AFC4.h"
@@ -135,7 +135,7 @@ BOOL ScrCmd_1DD(ScriptContext *param0)
         sub_0204A660(v6, param0->fieldSystem->saveData);
         break;
     case (30 + 8):
-        sub_0204A7A4(v6, param0->fieldSystem->saveData, param0->fieldSystem->journal);
+        sub_0204A7A4(v6, param0->fieldSystem->saveData, param0->fieldSystem->journalEntry);
         break;
     case (30 + 9):
         sub_0204A8C8(v6);

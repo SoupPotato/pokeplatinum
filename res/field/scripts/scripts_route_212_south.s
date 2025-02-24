@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/route_212_south.h"
 
     .data
 
@@ -10,7 +11,7 @@
     ScriptEntry _00F9
     ScriptEntry _0022
     ScriptEntry _00E4
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0022:
     GetTimeOfDay 0x4000

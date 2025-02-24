@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/solaceon_town.h"
 
     .data
 
@@ -14,7 +15,7 @@
     ScriptEntry _0034
     ScriptEntry _0032
     ScriptEntry _0168
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0032:
     End
@@ -91,7 +92,7 @@ _00CC:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_134 9, 0x800C
+    CheckPoketchAppRegistered POKETCH_APPID_POKEMONHISTORY, 0x800C
     GoToIfEq 0x800C, 1, _0118
     ScrCmd_11E 0x800C
     GoToIfLt 0x800C, 50, _010D
@@ -143,15 +144,15 @@ _0151:
 
 _0168:
     LockAll
-    ApplyMovement 0xFF, _0218
+    ApplyMovement LOCALID_PLAYER, _0218
     WaitMovement
     CallCommonScript 0x7FA
     GetPlayerMapPos 0x8004, 0x8005
-    ScrCmd_186 18, 0x8004, 0x295
+    SetObjectEventPos 18, 0x8004, 0x295
     ClearFlag 0x21E
-    ScrCmd_064 18
+    AddObject 18
     ScrCmd_062 18
-    ApplyMovement 0xFF, _0228
+    ApplyMovement LOCALID_PLAYER, _0228
     ApplyMovement 18, _01E8
     WaitMovement
     Message 0
@@ -167,7 +168,7 @@ _0168:
     CloseMessage
     ApplyMovement 18, _0210
     WaitMovement
-    ScrCmd_065 18
+    RemoveObject 18
     CallCommonScript 0x7FB
     SetVar 0x4073, 1
     ReleaseAll
@@ -175,33 +176,33 @@ _0168:
 
     .balign 4, 0
 _01E8:
-    MoveAction_011 7
+    MoveAction_017 7
     EndMovement
 
     .balign 4, 0
 _01F0:
-    MoveAction_026
-    MoveAction_03F
-    MoveAction_027
-    MoveAction_03F
-    MoveAction_025
+    MoveAction_038
+    MoveAction_063
+    MoveAction_039
+    MoveAction_063
+    MoveAction_037
     EndMovement
 
     .balign 4, 0
 _0208:
-    MoveAction_04B
+    MoveAction_075
     EndMovement
 
     .balign 4, 0
 _0210:
-    MoveAction_010 7
+    MoveAction_016 7
     EndMovement
 
     .balign 4, 0
 _0218:
-    MoveAction_03F
-    MoveAction_04B
-    MoveAction_03F 3
+    MoveAction_063
+    MoveAction_075
+    MoveAction_063 3
     EndMovement
 
     .balign 4, 0

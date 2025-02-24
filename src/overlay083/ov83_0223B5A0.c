@@ -3,11 +3,11 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "consts/game_records.h"
+#include "generated/game_records.h"
+#include "generated/trainer_score_events.h"
 
 #include "struct_decls/struct_0202440C_decl.h"
 #include "struct_decls/struct_0202B370_decl.h"
-#include "struct_defs/struct_0202A93C.h"
 
 #include "overlay004/ov4_021D0D80.h"
 #include "overlay083/ov83_0223C958.h"
@@ -21,10 +21,8 @@
 #include "savedata/save_table.h"
 
 #include "bag.h"
-#include "cell_actor.h"
 #include "communication_information.h"
 #include "communication_system.h"
-#include "core_sys.h"
 #include "game_options.h"
 #include "game_records.h"
 #include "gx_layers.h"
@@ -32,17 +30,18 @@
 #include "journal.h"
 #include "overlay_manager.h"
 #include "poffin.h"
+#include "sprite.h"
+#include "system.h"
 #include "unk_020041CC.h"
 #include "unk_02005474.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
 #include "unk_0202ACE0.h"
 #include "unk_020363E8.h"
 #include "unk_020366A0.h"
 #include "unk_0203909C.h"
 #include "unk_020393C8.h"
 #include "unk_0206CCB0.h"
+#include "vram_transfer.h"
 
 typedef int (*UnkFuncPtr_ov83_0224024C)(UnkStruct_ov83_0223C344 *, UnkStruct_ov83_0223B784 *, int *);
 
@@ -100,7 +99,7 @@ static void ov83_0223B5A0(void *param0)
     UnkStruct_ov83_0223B784 *v1 = (v0->unk_18);
 
     ov83_0223CBFC(v1);
-    sub_0201DCAC();
+    VramTransfer_Process();
 }
 
 int ov83_0223B5B0(OverlayManager *param0, int *param1)
@@ -115,7 +114,7 @@ int ov83_0223B5B0(OverlayManager *param0, int *param1)
     v0->unk_18 = v1;
     v1->unk_00 = 56;
 
-    VRAMTransferManager_New(16, v1->unk_00);
+    VramTransfer_New(16, v1->unk_00);
 
     if (v0->unk_06_0 == 1) {
         v1->unk_1490 = 1;
@@ -133,7 +132,7 @@ int ov83_0223B5B0(OverlayManager *param0, int *param1)
     v1->unk_28 = Options_TextFrameDelay(v0->unk_10->unk_18);
     v1->unk_31C = 1;
 
-    SetMainCallback(ov83_0223B5A0, v0);
+    SetVBlankCallback(ov83_0223B5A0, v0);
     DisableHBlank();
     sub_02004550(12, 1183, 1);
 
@@ -221,9 +220,9 @@ int ov83_0223B710(OverlayManager *param0, int *param1)
 
     ov83_0223D1EC(v2);
 
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     DisableHBlank();
-    VRAMTransferManager_Destroy();
+    VramTransfer_Free();
     MI_CpuClear8(v2, sizeof(UnkStruct_ov83_0223B784));
     OverlayManager_FreeData(param0);
 
@@ -412,7 +411,7 @@ static int ov83_0223B9EC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
     case 5:
         v2 = ov83_0223E32C(&param1->unk_5E4);
         {
-            int v3 = CellActor_GetAnimFrame(param1->unk_5E4.unk_08);
+            int v3 = Sprite_GetAnimFrame(param1->unk_5E4.unk_08);
 
             if (param1->unk_3BC != (v3 + 1) / 3) {
                 if (v3 < 10) {
@@ -598,9 +597,9 @@ static int ov83_0223BCEC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
         break;
     case 4:
         if (ov83_0223D570(param1->unk_148C) == 0) {
-            v0 = Poffin_malloc(param1->unk_00);
+            v0 = Poffin_New(param1->unk_00);
             ov83_0223FFD4(&param1->unk_34C, v0, &param1->unk_1494, param1->unk_1488, param1->unk_00);
-            v1 = ov83_0223D508(28, v0, Poffin_sizeof(), param1->unk_148C);
+            v1 = ov83_0223D508(28, v0, Poffin_SizeOf(), param1->unk_148C);
             Heap_FreeToHeap(v0);
 
             if (v1 == 1) {
@@ -681,7 +680,7 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
     case 4:
         param1->unk_1C--;
 
-        if ((param1->unk_1C < 0) || (gCoreSys.touchPressed) || (gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
+        if ((param1->unk_1C < 0) || (gSystem.touchPressed) || (gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
             (*param2)++;
             break;
         }
@@ -699,7 +698,7 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
     case 6:
         param1->unk_1C--;
 
-        if ((gCoreSys.touchPressed) || (param1->unk_1C < 0) || (gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
+        if ((gSystem.touchPressed) || (param1->unk_1C < 0) || (gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
             (*param2)++;
         }
         break;
@@ -713,7 +712,7 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
 
         if ((v0 == 1) || (v0 == 2)) {
             if (v0 == 1) {
-                if (sub_0202AC98(param0->unk_10->unk_08) >= 100) {
+                if (Poffin_GetNumberOfFilledSlots(param0->unk_10->unk_08) >= MAX_POFFINS) {
                     ov83_0223EC8C(&param1->unk_6A0, 2);
                     (*param2) = 10;
                     param1->unk_1C = (30 * 5);
@@ -749,7 +748,7 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
     case 10:
         param1->unk_1C--;
 
-        if ((gCoreSys.touchPressed) || (param1->unk_1C < 0) || (gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
+        if ((gSystem.touchPressed) || (param1->unk_1C < 0) || (gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
             if (param1->unk_1488 > 1) {
                 ov83_0223EC8C(&param1->unk_6A0, 6);
                 ov83_0223E9BC(&param1->unk_6A0);
@@ -795,13 +794,11 @@ static int ov83_0223C258(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
                 ov83_0223EC8C(&param1->unk_6A0, 4);
             }
 
-            {
-                void *v0;
+            void *journalEntryOnlineEvent;
 
-                if (param1->unk_1490 == 1) {
-                    v0 = sub_0202C1E0(param1->unk_00);
-                    Journal_SaveData(param0->unk_10->unk_1C, v0, 4);
-                }
+            if (param1->unk_1490 == 1) {
+                journalEntryOnlineEvent = JournalEntry_CreateEventMadePoffins(param1->unk_00);
+                JournalEntry_SaveData(param0->unk_10->unk_1C, journalEntryOnlineEvent, JOURNAL_ONLINE_EVENT);
             }
         }
 
@@ -1060,7 +1057,7 @@ static void ov83_0223C82C(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B7
 {
     int v0;
 
-    param1->unk_1494.unk_100 = Poffin_malloc(param1->unk_00);
+    param1->unk_1494.unk_100 = Poffin_New(param1->unk_00);
     param1->unk_1494.unk_144 = ov83_0223D570(param1->unk_148C);
 
     for (v0 = 0; v0 < 4; v0++) {
@@ -1094,9 +1091,9 @@ static BOOL ov83_0223C8B0(UnkStruct_ov83_0223C344 *param0, Poffin *param1, int p
     TVBroadcast *v4 = SaveData_TVBroadcast(param0->unk_10->unk_0C);
 
     for (v0 = 0; v0 < param2; v0++) {
-        v1 = sub_0202AB74(param0->unk_10->unk_08, param1);
+        v1 = Poffin_AddToCase(param0->unk_10->unk_08, param1);
 
-        if (v1 == 0xFFFF) {
+        if (v1 == POFFIN_NONE) {
             v3 = 0;
             break;
         }

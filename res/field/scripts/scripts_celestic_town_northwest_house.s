@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/celestic_town_northwest_house.h"
 
     .data
 
@@ -6,7 +7,7 @@
     ScriptEntry _002B
     ScriptEntry _0041
     ScriptEntry _0057
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0012:
     PlayFanfare SEQ_SE_CONFIRM

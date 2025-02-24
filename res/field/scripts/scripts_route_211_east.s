@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/route_211_east.h"
 
     .data
 
@@ -6,7 +7,7 @@
     ScriptEntry _0088
     ScriptEntry _009F
     ScriptEntry _00B4
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0012:
     PlayFanfare SEQ_SE_CONFIRM
@@ -42,7 +43,7 @@ _0073:
 
     .balign 4, 0
 _0080:
-    MoveAction_04B
+    MoveAction_075
     EndMovement
 
 _0088:

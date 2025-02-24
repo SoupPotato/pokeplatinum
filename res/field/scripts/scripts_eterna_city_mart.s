@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/eterna_city_mart.h"
 
     .data
 
@@ -6,7 +7,7 @@
     ScriptEntry _0028
     ScriptEntry _003E
     ScriptEntry _005B
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0012:
     PlayFanfare SEQ_SE_CONFIRM

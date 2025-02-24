@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "struct_decls/struct_020998EC_decl.h"
-#include "struct_defs/struct_0200C738.h"
 #include "struct_defs/struct_02099F80.h"
 
 #include "overlay020/ov20_021D0D80.h"
@@ -21,17 +20,17 @@
 #include "overlay020/struct_ov20_021D4AD4_decl.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
 #include "graphics.h"
 #include "gx_layers.h"
 #include "heap.h"
 #include "narc.h"
+#include "render_oam.h"
+#include "sprite.h"
+#include "sprite_util.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
-#include "unk_020093B4.h"
-#include "unk_0200A784.h"
+#include "system.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
 
 typedef struct UnkStruct_ov20_021D2128_t {
     SysTask *unk_00;
@@ -40,8 +39,8 @@ typedef struct UnkStruct_ov20_021D2128_t {
     const UnkStruct_ov20_021D16E8 *unk_18;
     const UnkStruct_020998EC *unk_1C;
     BgConfig *unk_20;
-    CellActorCollection *unk_24;
-    UnkStruct_0200C738 unk_28;
+    SpriteList *unk_24;
+    G2dRenderer unk_28;
     NNSG2dImageProxy unk_1B4[2];
     NNSG2dImagePaletteProxy unk_1FC[2];
     NNSG2dCellDataBank *unk_224[2];
@@ -106,16 +105,16 @@ UnkStruct_ov20_021D2128 *ov20_021D2098(const UnkStruct_ov20_021D16E8 *param0, co
     if (v0) {
         int v1;
 
-        SetMainCallback(NULL, NULL);
+        SetVBlankCallback(NULL, NULL);
         DisableHBlank();
 
         v0->unk_18 = param0;
         v0->unk_1C = param1;
 
         NNS_G2dInitOamManagerModule();
-        sub_0200A784(0, 128, 0, 32, 0, 128, 0, 32, 35);
+        RenderOam_Init(0, 128, 0, 32, 0, 128, 0, 32, 35);
 
-        v0->unk_24 = sub_020095C4(128, &v0->unk_28, 35);
+        v0->unk_24 = SpriteList_InitRendering(128, &v0->unk_28, 35);
         v0->unk_20 = BgConfig_New(35);
         v0->unk_00 = SysTask_Start(ov20_021D2178, v0, 2);
         v0->unk_04 = ov20_021D2170(ov20_021D217C, v0, 1);
@@ -133,7 +132,7 @@ void ov20_021D2128(UnkStruct_ov20_021D2128 *param0)
     if (param0) {
         int v0;
 
-        SetMainCallback(NULL, NULL);
+        SetVBlankCallback(NULL, NULL);
 
         for (v0 = 0; v0 < 4; v0++) {
             if (param0->unk_08[v0]) {
@@ -144,8 +143,8 @@ void ov20_021D2128(UnkStruct_ov20_021D2128 *param0)
         SysTask_Done(param0->unk_00);
         SysTask_Done(param0->unk_04);
 
-        sub_0200A878();
-        CellActorCollection_Delete(param0->unk_24);
+        RenderOam_Free();
+        SpriteList_Delete(param0->unk_24);
 
         Heap_FreeToHeap(param0->unk_20);
         Heap_FreeToHeap(param0);
@@ -166,8 +165,8 @@ static void ov20_021D217C(SysTask *param0, void *param1)
 {
     UnkStruct_ov20_021D2128 *v0 = param1;
 
-    CellActorCollection_Update(v0->unk_24);
-    sub_0200A858();
+    SpriteList_Update(v0->unk_24);
+    RenderOam_Transfer();
 
     OS_SetIrqCheckFlag(OS_IE_V_BLANK);
 }
@@ -957,12 +956,12 @@ BgConfig *ov20_021D2E04(UnkStruct_ov20_021D2128 *param0)
     return param0->unk_20;
 }
 
-CellActorCollection *ov20_021D2E08(UnkStruct_ov20_021D2128 *param0)
+SpriteList *ov20_021D2E08(UnkStruct_ov20_021D2128 *param0)
 {
     return param0->unk_24;
 }
 
-void ov20_021D2E0C(UnkStruct_ov20_021D2128 *param0, CellActorResourceData *param1, u32 param2, u32 param3)
+void ov20_021D2E0C(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param1, u32 param2, u32 param3)
 {
     param1->imageProxy = &param0->unk_1B4[param2];
     param1->paletteProxy = &param0->unk_1FC[param2];
@@ -975,13 +974,13 @@ void ov20_021D2E0C(UnkStruct_ov20_021D2128 *param0, CellActorResourceData *param
     param1->isVRamTransfer = 0;
 }
 
-CellActor *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, CellActorResourceData *param1, u32 param2, u32 param3, u32 param4, int param5)
+Sprite *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, SpriteResourcesHeader *param1, u32 param2, u32 param3, u32 param4, int param5)
 {
-    CellActorInitParams v0;
-    CellActor *v1;
+    SpriteListTemplate v0;
+    Sprite *v1;
     OSIntrMode v2;
 
-    v0.collection = param0->unk_24;
+    v0.list = param0->unk_24;
     v0.resourceData = param1;
     v0.position.x = param2 * FX32_ONE;
     v0.position.y = param3 * FX32_ONE;
@@ -991,13 +990,13 @@ CellActor *ov20_021D2E50(UnkStruct_ov20_021D2128 *param0, CellActorResourceData 
     v0.heapID = 35;
 
     v2 = OS_DisableInterrupts();
-    v1 = CellActorCollection_Add(&v0);
+    v1 = SpriteList_Add(&v0);
 
     OS_RestoreInterrupts(v2);
 
     if (v1) {
-        CellActor_SetAnimateFlag(v1, 1);
-        CellActor_SetAnimSpeed(v1, ((FX32_ONE * 2) / 2));
+        Sprite_SetAnimateFlag(v1, 1);
+        Sprite_SetAnimSpeed(v1, ((FX32_ONE * 2) / 2));
     }
 
     return v1;

@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/survival_area.h"
 
     .data
 
@@ -12,7 +13,7 @@
     ScriptEntry _002A
     ScriptEntry _0045
     ScriptEntry _0141
-    .short 0xFD13
+    ScriptEntryEnd
 
 _002A:
     GoTo _0032
@@ -28,7 +29,7 @@ _0045:
     End
 
 _0052:
-    ScrCmd_18A 0, 0x28C, 0x150
+    SetWarpEventPos 0, 0x28C, 0x150
     End
 
 _005C:
@@ -104,19 +105,19 @@ _00D5:
     ScrCmd_16C 77
     ScrCmd_169 77
     ScrCmd_16A 77
-    ScrCmd_065 8
+    RemoveObject 8
     ReleaseAll
     End
 
     .balign 4, 0
 _011C:
-    MoveAction_020
+    MoveAction_032
     EndMovement
 
     .balign 4, 0
 _0124:
-    MoveAction_00C
-    MoveAction_045
+    MoveAction_012
+    MoveAction_069
     EndMovement
 
 _0130:
@@ -132,9 +133,9 @@ _0141:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_234 0x4000
-    GoToIfEq 0x4000, 0, _01BE
-    GoToIfEq 0x4000, 6, _01BE
+    GetDayOfWeek 0x4000
+    GoToIfEq 0x4000, DAY_OF_WEEK_SUNDAY, _01BE
+    GoToIfEq 0x4000, DAY_OF_WEEK_SATURDAY, _01BE
     BufferRivalName 0
     BufferPlayerName 1
     SetVar 0x8008, 0x40C2
@@ -170,9 +171,9 @@ _01BE:
     BufferPlayerName 1
     Message 2
     CloseMessage
-    ScrCmd_0DE 0x800C
-    GoToIfEq 0x800C, 0x183, _0236
-    GoToIfEq 0x800C, 0x186, _0272
+    GetPlayerStarterSpecies 0x800C
+    GoToIfEq 0x800C, SPECIES_TURTWIG, _0236
+    GoToIfEq 0x800C, SPECIES_CHIMCHAR, _0272
     GoTo _01FA
     End
 
@@ -183,12 +184,12 @@ _01FA:
     End
 
 _021A:
-    StartTrainerBattle trainer_rival_survival_area_1_piplup
+    StartTrainerBattle TRAINER_RIVAL_SURVIVAL_AREA_1_PIPLUP
     GoTo _02AE
     End
 
 _0228:
-    StartTrainerBattle trainer_rival_survival_area_2_piplup
+    StartTrainerBattle TRAINER_RIVAL_SURVIVAL_AREA_2_PIPLUP
     GoTo _02AE
     End
 
@@ -199,12 +200,12 @@ _0236:
     End
 
 _0256:
-    StartTrainerBattle trainer_rival_survival_area_1_turtwig
+    StartTrainerBattle TRAINER_RIVAL_SURVIVAL_AREA_1_TURTWIG
     GoTo _02AE
     End
 
 _0264:
-    StartTrainerBattle trainer_rival_survival_area_2_turtwig
+    StartTrainerBattle TRAINER_RIVAL_SURVIVAL_AREA_2_TURTWIG
     GoTo _02AE
     End
 
@@ -215,18 +216,18 @@ _0272:
     End
 
 _0292:
-    StartTrainerBattle trainer_rival_survival_area_1_chimchar
+    StartTrainerBattle TRAINER_RIVAL_SURVIVAL_AREA_1_CHIMCHAR
     GoTo _02AE
     End
 
 _02A0:
-    StartTrainerBattle trainer_rival_survival_area_2_chimchar
+    StartTrainerBattle TRAINER_RIVAL_SURVIVAL_AREA_2_CHIMCHAR
     GoTo _02AE
     End
 
 _02AE:
     CheckWonBattle 0x800C
-    GoToIfEq 0x800C, 0, _02DC
+    GoToIfEq 0x800C, FALSE, _02DC
     SetFlag 0xAB2
     GoTo _02CB
     End
@@ -241,7 +242,7 @@ _02CB:
     End
 
 _02DC:
-    ScrCmd_0EB
+    BlackOutFromBattle
     ReleaseAll
     End
 

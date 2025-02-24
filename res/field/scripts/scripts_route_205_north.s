@@ -1,11 +1,12 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/route_205_north.h"
 
     .data
 
     ScriptEntry _000E
     ScriptEntry _0021
     ScriptEntry _0038
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000E:
     PlayFanfare SEQ_SE_CONFIRM

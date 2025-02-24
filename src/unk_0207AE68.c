@@ -3,13 +3,14 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "consts/game_records.h"
-#include "consts/items.h"
-#include "consts/species.h"
+#include "generated/game_records.h"
+#include "generated/items.h"
+#include "generated/moves.h"
+#include "generated/species.h"
+#include "generated/trainer_score_events.h"
 
 #include "struct_decls/pokedexdata_decl.h"
 #include "struct_decls/struct_0207AE68_decl.h"
-#include "struct_decls/struct_party_decl.h"
 #include "struct_defs/archived_sprite.h"
 #include "struct_defs/sprite_animation_frame.h"
 #include "struct_defs/struct_0202818C.h"
@@ -22,7 +23,6 @@
 
 #include "bag.h"
 #include "bg_window.h"
-#include "core_sys.h"
 #include "game_options.h"
 #include "game_records.h"
 #include "graphics.h"
@@ -35,32 +35,32 @@
 #include "overlay_manager.h"
 #include "palette.h"
 #include "party.h"
+#include "pokedex.h"
 #include "pokemon.h"
-#include "poketch_data.h"
+#include "poketch.h"
 #include "render_text.h"
 #include "render_window.h"
 #include "strbuf.h"
 #include "string_template.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
+#include "system.h"
 #include "text.h"
 #include "unk_02005474.h"
 #include "unk_0200762C.h"
 #include "unk_0200F174.h"
 #include "unk_0201567C.h"
 #include "unk_02015F84.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
 #include "unk_0202419C.h"
 #include "unk_02024220.h"
-#include "unk_0202631C.h"
 #include "unk_02028124.h"
 #include "unk_020393C8.h"
 #include "unk_0207C63C.h"
+#include "vram_transfer.h"
 
 #include "constdata/const_020F410C.h"
 
-UnkStruct_0207AE68 *sub_0207AE68(Party *param0, Pokemon *param1, int param2, Options *param3, int param4, PokedexData *param5, Bag *param6, GameRecords *records, PoketchData *poketchData, int param9, int param10, int param11);
+UnkStruct_0207AE68 *sub_0207AE68(Party *param0, Pokemon *param1, int param2, Options *param3, int param4, Pokedex *param5, Bag *param6, GameRecords *records, Poketch *poketch, int param9, int param10, int param11);
 static void sub_0207B0A0(SysTask *param0, void *param1);
 BOOL sub_0207B0D0(UnkStruct_0207AE68 *param0);
 void sub_0207B0E0(UnkStruct_0207AE68 *param0);
@@ -90,7 +90,7 @@ static const u8 Unk_020F0A2C[] = {
     0x8
 };
 
-UnkStruct_0207AE68 *sub_0207AE68(Party *param0, Pokemon *param1, int param2, Options *param3, int param4, PokedexData *param5, Bag *param6, GameRecords *records, PoketchData *poketchData, int param9, int param10, int param11)
+UnkStruct_0207AE68 *sub_0207AE68(Party *param0, Pokemon *param1, int param2, Options *param3, int param4, Pokedex *param5, Bag *param6, GameRecords *records, Poketch *poketch, int param9, int param10, int param11)
 {
     UnkStruct_0207AE68 *v0;
     ArchivedSprite v1;
@@ -149,7 +149,7 @@ UnkStruct_0207AE68 *sub_0207AE68(Party *param0, Pokemon *param1, int param2, Opt
     v0->unk_48 = param5;
     v0->unk_4C = param6;
     v0->records = records;
-    v0->poketchData = poketchData;
+    v0->poketch = poketch;
     v0->unk_78 = param9;
     v0->unk_7C = param10;
 
@@ -192,7 +192,7 @@ void sub_0207B0E0(UnkStruct_0207AE68 *param0)
 
     sub_0200F344(0, 0x0);
     sub_0200F344(1, 0x0);
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     Windows_Delete(param0->unk_04, 1);
     PaletteData_FreeBuffer(param0->unk_14, 0);
     PaletteData_FreeBuffer(param0->unk_14, 1);
@@ -242,7 +242,7 @@ static void sub_0207B180(UnkStruct_0207AE68 *param0)
         }
     }
 
-    if ((param0->unk_7C & 0x1) && (param0->unk_64 == 8) && (gCoreSys.pressedKeys & PAD_BUTTON_B)) {
+    if ((param0->unk_7C & 0x1) && (param0->unk_64 == 8) && (gSystem.pressedKeys & PAD_BUTTON_B)) {
         PaletteData_StartFade(param0->unk_14, (0x1 | 0x2 | 0x4 | 0x8), (0xc00 ^ 0xffff), 0, 0, 16, 0x7fff);
         param0->unk_64 = 41;
     }
@@ -409,10 +409,10 @@ static void sub_0207B180(UnkStruct_0207AE68 *param0)
     case 12:
         if (Text_IsPrinterActive(param0->unk_65) == 0) {
             if (--param0->unk_66 == 0) {
-                sub_0202736C(param0->unk_48, param0->unk_28);
+                Pokedex_Capture(param0->unk_48, param0->unk_28);
                 GameRecords_IncrementRecordValue(param0->records, RECORD_UNK_012);
                 GameRecords_IncrementTrainerScore(param0->records, TRAINER_SCORE_EVENT_CAUGHT_SPECIES);
-                PoketchData_PokemonHistoryEnqueue(param0->poketchData, Pokemon_GetBoxPokemon(param0->unk_28));
+                Poketch_PokemonHistoryEnqueue(param0->poketch, Pokemon_GetBoxPokemon(param0->unk_28));
 
                 if (Pokemon_GetValue(param0->unk_28, MON_DATA_HAS_NICKNAME, NULL) == 0) {
                     Pokemon_SetValue(param0->unk_28, MON_DATA_SPECIES_NAME, NULL);
@@ -500,11 +500,11 @@ static void sub_0207B180(UnkStruct_0207AE68 *param0)
             sub_02007DEC(param0->unk_1C[1], 6, 1);
             param0->unk_3C->monData = param0->unk_28;
             param0->unk_3C->options = param0->unk_2C;
-            param0->unk_3C->dataType = 0;
-            param0->unk_3C->pos = 0;
-            param0->unk_3C->max = 1;
+            param0->unk_3C->dataType = SUMMARY_DATA_MON;
+            param0->unk_3C->monIndex = 0;
+            param0->unk_3C->monMax = 1;
             param0->unk_3C->move = param0->unk_6C;
-            param0->unk_3C->mode = 2;
+            param0->unk_3C->mode = SUMMARY_MODE_SELECT_MOVE;
             param0->unk_3C->chatotCry = NULL;
             PokemonSummaryScreen_FlagVisiblePages(param0->unk_3C, Unk_020F0A2C);
             sub_0207C624(param0);
@@ -531,10 +531,10 @@ static void sub_0207B180(UnkStruct_0207AE68 *param0)
         sub_0200F338(1);
 
         if (PaletteData_GetSelectedBuffersMask(param0->unk_14) == 0) {
-            if (param0->unk_3C->selectedSlot == 4) {
+            if (param0->unk_3C->selectedMoveSlot == LEARNED_MOVES_MAX) {
                 param0->unk_64 = 32;
             } else {
-                param0->unk_6E = param0->unk_3C->selectedSlot;
+                param0->unk_6E = param0->unk_3C->selectedMoveSlot;
                 param0->unk_64 = 25;
             }
         }
@@ -739,10 +739,10 @@ static void sub_0207C028(UnkStruct_0207AE68 *param0)
 
                 Pokemon_CalcLevelAndStats(v1);
                 Party_AddPokemon(param0->unk_24, v1);
-                sub_0202736C(param0->unk_48, v1);
+                Pokedex_Capture(param0->unk_48, v1);
                 GameRecords_IncrementRecordValue(param0->records, RECORD_UNK_012);
                 GameRecords_IncrementTrainerScore(param0->records, TRAINER_SCORE_EVENT_CAUGHT_SPECIES);
-                PoketchData_PokemonHistoryEnqueue(param0->poketchData, Pokemon_GetBoxPokemon(v1));
+                Poketch_PokemonHistoryEnqueue(param0->poketch, Pokemon_GetBoxPokemon(v1));
                 Heap_FreeToHeap(v1);
                 Bag_TryRemoveItem(param0->unk_4C, ITEM_POKE_BALL, 1, param0->unk_5C);
             }
@@ -921,7 +921,7 @@ static void sub_0207C1CC(UnkStruct_0207AE68 *param0, BgConfig *param1)
 
     GXLayers_TurnBothDispOn();
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
-    SetMainCallback(sub_0207C520, param0);
+    SetVBlankCallback(sub_0207C520, param0);
 }
 
 static void sub_0207C460(BgConfig *param0)
@@ -963,7 +963,7 @@ static void sub_0207C520(void *param0)
     G2_SetWnd0Position(v0->unk_72, v0->unk_73, v0->unk_74, v0->unk_75);
 
     sub_02008A94(v0->unk_18);
-    sub_0201DCAC();
+    VramTransfer_Process();
     PaletteData_CommitFadedBuffers(v0->unk_14);
     Bg_RunScheduledUpdates(v0->unk_00);
 

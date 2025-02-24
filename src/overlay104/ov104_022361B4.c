@@ -3,12 +3,11 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "consts/game_records.h"
+#include "generated/game_records.h"
 
 #include "struct_decls/struct_020302DC_decl.h"
 #include "struct_decls/struct_0203041C_decl.h"
 #include "struct_decls/struct_0203068C_decl.h"
-#include "struct_decls/struct_party_decl.h"
 #include "struct_defs/struct_0204B184.h"
 
 #include "overlay104/ov104_0222DCE0.h"
@@ -36,12 +35,12 @@
 #include "savedata.h"
 #include "strbuf.h"
 #include "string_template.h"
+#include "system_vars.h"
 #include "text.h"
 #include "trainer_info.h"
 #include "unk_020302D0.h"
 #include "unk_0203061C.h"
 #include "unk_0205DFC4.h"
-#include "unk_0206AFE0.h"
 #include "vars_flags.h"
 
 UnkStruct_ov104_0223BA10 *ov104_022361B4(SaveData *param0, u16 param1, u8 param2, u16 param3, u16 param4, u16 param5, u16 *param6);
@@ -95,7 +94,7 @@ UnkStruct_ov104_0223BA10 *ov104_022361B4(SaveData *param0, u16 param1, u8 param2
         sub_020302D0(v4);
 
         if (v9->unk_10 == 3) {
-            v5 = sub_0206B6FC(SaveData_GetVarsFlags(v9->unk_04));
+            v5 = SystemVars_GetWiFiFrontierCleared(SaveData_GetVarsFlags(v9->unk_04));
         } else {
             v5 = (u8)sub_02030470(v10, 9, v9->unk_10, 0, NULL);
         }

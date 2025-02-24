@@ -23,17 +23,16 @@
 
 #include "communication_information.h"
 #include "communication_system.h"
-#include "core_sys.h"
 #include "graphics.h"
 #include "heap.h"
 #include "narc.h"
 #include "overlay_manager.h"
+#include "system.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
 #include "unk_020363E8.h"
 #include "unk_020366A0.h"
 #include "unk_020393C8.h"
+#include "vram_transfer.h"
 
 typedef struct UnkStruct_ov115_0226095C_t {
     UnkStruct_ov114_0225D678 *unk_00;
@@ -131,11 +130,11 @@ int ov115_0226048C(OverlayManager *param0, int *param1)
         }
         break;
     case 2:
-        if (gCoreSys.heldKeys & PAD_BUTTON_A) {
+        if (gSystem.heldKeys & PAD_BUTTON_A) {
             break;
         }
 
-        SetMainCallback(ov115_02260A50, v0);
+        SetVBlankCallback(ov115_02260A50, v0);
         DisableHBlank();
 
         v0->unk_38 = 0;
@@ -143,7 +142,7 @@ int ov115_0226048C(OverlayManager *param0, int *param1)
         v0->unk_40 = 0;
         memset(v0->unk_84, 0, sizeof(u8) * 4);
 
-        VRAMTransferManager_New(32, 99);
+        VramTransfer_New(32, 99);
         ov115_02265A24(v0);
 
         v0->unk_80 = 1;
@@ -331,9 +330,9 @@ int ov115_0226048C(OverlayManager *param0, int *param1)
 
         ov115_02260D78(v0->unk_34);
         v0->unk_34 = NULL;
-        SetMainCallback(NULL, NULL);
+        SetVBlankCallback(NULL, NULL);
         DisableHBlank();
-        VRAMTransferManager_Destroy();
+        VramTransfer_Free();
         (*param1)++;
         break;
     case 14: {
@@ -547,7 +546,7 @@ static void ov115_02260B30(UnkStruct_ov115_0226095C *param0)
 
 static void ov115_02260B44(UnkStruct_ov115_0226095C *param0, UnkStruct_ov115_02260440 *param1)
 {
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     DisableHBlank();
 
     if (param0->unk_00 != NULL) {
@@ -561,7 +560,7 @@ static void ov115_02260B44(UnkStruct_ov115_0226095C *param0, UnkStruct_ov115_022
         }
 
         ov115_02260D78(param0->unk_34);
-        VRAMTransferManager_Destroy();
+        VramTransfer_Free();
     }
 
     if (param1->unk_38) {

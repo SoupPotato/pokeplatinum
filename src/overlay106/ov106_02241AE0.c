@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "struct_decls/struct_0200C440_decl.h"
-#include "struct_decls/struct_party_decl.h"
 #include "struct_defs/struct_02099F80.h"
 
 #include "applications/pokemon_summary_screen/main.h"
@@ -19,9 +18,7 @@
 #include "overlay106/struct_ov106_02243650_decl.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
 #include "communication_system.h"
-#include "core_sys.h"
 #include "font.h"
 #include "game_options.h"
 #include "game_overlay.h"
@@ -35,26 +32,27 @@
 #include "palette.h"
 #include "party.h"
 #include "pokemon.h"
+#include "render_oam.h"
 #include "render_window.h"
 #include "save_player.h"
 #include "savedata.h"
+#include "sprite.h"
+#include "sprite_util.h"
 #include "strbuf.h"
 #include "string_list.h"
 #include "string_template.h"
+#include "system.h"
 #include "text.h"
 #include "trainer_info.h"
 #include "unk_02005474.h"
-#include "unk_020093B4.h"
-#include "unk_0200A784.h"
 #include "unk_0200C440.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
 #include "unk_02030108.h"
 #include "unk_020363E8.h"
 #include "unk_020393C8.h"
 #include "unk_0207A274.h"
 #include "unk_0209BA80.h"
+#include "vram_transfer.h"
 
 #include "constdata/const_020F410C.h"
 
@@ -301,7 +299,7 @@ int ov106_02241B9C(OverlayManager *param0, int *param1)
         break;
     }
 
-    CellActorCollection_Update(v0->unk_C0.unk_00);
+    SpriteList_Update(v0->unk_C0.unk_00);
     return 0;
 }
 
@@ -315,7 +313,7 @@ int ov106_02241CF0(OverlayManager *param0, int *param1)
     ov106_022423E8(v1);
 
     OverlayManager_FreeData(param0);
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     Heap_Destroy(98);
     Overlay_UnloadByID(FS_OVERLAY_ID(overlay104));
 
@@ -380,7 +378,7 @@ static BOOL ov106_02241E14(UnkStruct_ov106_02243118 *param0)
     case 0:
 
         if (OverlayManager_Exec(param0->unk_04) == 1) {
-            param0->unk_288 = param0->unk_BC->pos;
+            param0->unk_288 = param0->unk_BC->monIndex;
             Heap_FreeToHeap(param0->unk_BC);
             Heap_FreeToHeap(param0->unk_04);
             param0->unk_04 = NULL;
@@ -405,9 +403,9 @@ static BOOL ov106_02241E5C(UnkStruct_ov106_02243118 *param0)
         param0->unk_08 = 1;
         break;
     case 1:
-        ov106_02242D64(param0, gCoreSys.pressedKeys);
+        ov106_02242D64(param0, gSystem.pressedKeys);
 
-        if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+        if (gSystem.pressedKeys & PAD_BUTTON_A) {
             if (ov104_0223B5A4(param0->unk_0D) == 0xfe) {
                 Sound_PlayEffect(1501);
                 StartScreenTransition(0, 0, 0, 0x0, 6, 1, 98);
@@ -783,7 +781,7 @@ static void ov106_0224248C(UnkStruct_ov106_02243118 *param0)
 
 static void ov106_022424C8(void)
 {
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     SetHBlankCallback(NULL, NULL);
 
     GXLayers_DisableEngineALayers();
@@ -829,12 +827,12 @@ static void ov106_02242500(UnkStruct_ov106_02243118 *param0)
     ov106_022436CC(param0->unk_284, Party_GetPokemonBySlotIndex(param0->unk_290, 0));
 
     if (CommSys_IsInitialized()) {
-        sub_0200966C(NNS_G2D_VRAM_TYPE_2DMAIN, GX_OBJVRAMMODE_CHAR_1D_32K);
-        sub_02009704(NNS_G2D_VRAM_TYPE_2DMAIN);
+        ReserveVramForWirelessIconChars(NNS_G2D_VRAM_TYPE_2DMAIN, GX_OBJVRAMMODE_CHAR_1D_32K);
+        ReserveSlotsForWirelessIconPalette(NNS_G2D_VRAM_TYPE_2DMAIN);
         sub_02039734();
     }
 
-    SetMainCallback(ov106_022426E0, (void *)param0);
+    SetVBlankCallback(ov106_022426E0, (void *)param0);
     return;
 }
 
@@ -890,8 +888,8 @@ static void ov106_022426E0(void *param0)
     }
 
     Bg_RunScheduledUpdates(v0->unk_48);
-    sub_0201DCAC();
-    sub_0200A858();
+    VramTransfer_Process();
+    RenderOam_Transfer();
 
     OS_SetIrqCheckFlag(OS_IE_V_BLANK);
 }
@@ -1212,11 +1210,11 @@ static void ov106_02242CA4(UnkStruct_ov106_02243118 *param0)
     memset(param0->unk_BC, 0, sizeof(PokemonSummary));
 
     param0->unk_BC->monData = param0->unk_290;
-    param0->unk_BC->dataType = 1;
+    param0->unk_BC->dataType = SUMMARY_DATA_PARTY_MON;
     param0->unk_BC->options = param0->unk_B4;
-    param0->unk_BC->mode = 1;
-    param0->unk_BC->max = Party_GetCurrentCount(param0->unk_290);
-    param0->unk_BC->pos = 0;
+    param0->unk_BC->mode = SUMMARY_MODE_LOCK_MOVES;
+    param0->unk_BC->monMax = Party_GetCurrentCount(param0->unk_290);
+    param0->unk_BC->monIndex = 0;
     param0->unk_BC->move = 0;
     param0->unk_BC->dexMode = sub_0207A274(param0->unk_B8);
     param0->unk_BC->showContest = PokemonSummaryScreen_ShowContestData(param0->unk_B8);
@@ -1240,7 +1238,7 @@ static void ov106_02242D64(UnkStruct_ov106_02243118 *param0, int param1)
 
     v0 = 0;
 
-    if (gCoreSys.pressedKeys & PAD_KEY_LEFT) {
+    if (gSystem.pressedKeys & PAD_KEY_LEFT) {
         if (ov104_0223B5A4(param0->unk_0D) != 0xfe) {
             param0->unk_0C = param0->unk_0D;
         } else {
@@ -1258,7 +1256,7 @@ static void ov106_02242D64(UnkStruct_ov106_02243118 *param0, int param1)
         v0 = 1;
     }
 
-    if (gCoreSys.pressedKeys & PAD_KEY_RIGHT) {
+    if (gSystem.pressedKeys & PAD_KEY_RIGHT) {
         if (ov104_0223B5A4(param0->unk_0D) != 0xfe) {
             param0->unk_0C = param0->unk_0D;
         } else {
@@ -1276,7 +1274,7 @@ static void ov106_02242D64(UnkStruct_ov106_02243118 *param0, int param1)
         v0 = 1;
     }
 
-    if (gCoreSys.pressedKeys & PAD_KEY_UP) {
+    if (gSystem.pressedKeys & PAD_KEY_UP) {
         if (ov104_0223B5A4(param0->unk_0D) != 0xfe) {
             param0->unk_0C = param0->unk_0D;
         } else {
@@ -1302,7 +1300,7 @@ static void ov106_02242D64(UnkStruct_ov106_02243118 *param0, int param1)
         v0 = 1;
     }
 
-    if (gCoreSys.pressedKeys & PAD_KEY_DOWN) {
+    if (gSystem.pressedKeys & PAD_KEY_DOWN) {
         if (ov104_0223B5A4(param0->unk_0D) != 0xfe) {
             param0->unk_0C = param0->unk_0D;
         } else {

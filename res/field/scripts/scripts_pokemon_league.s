@@ -1,11 +1,12 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/pokemon_league.h"
 
     .data
 
     ScriptEntry _000E
     ScriptEntry _0025
     ScriptEntry _003C
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000E:
     ScrCmd_036 1, 1, 0, 0x800C

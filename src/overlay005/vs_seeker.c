@@ -3,7 +3,7 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "consts/sdat.h"
+#include "generated/sdat.h"
 
 #include "struct_decls/struct_02061AB4_decl.h"
 
@@ -23,9 +23,9 @@
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "system_flags.h"
+#include "system_vars.h"
 #include "unk_02005474.h"
 #include "unk_020655F4.h"
-#include "unk_0206AFE0.h"
 #include "vars_flags.h"
 
 #define VS_SEEKER_SEARCH_RADIUS_LEFT  7
@@ -425,7 +425,7 @@ static BOOL VsSeeker_ExecuteTask(FieldTask *taskMan)
     case VS_SEEKER_STATE_START:
         vsSeeker->playerStateTask = FieldSystem_StartVsSeekerTask(vsSeeker->fieldSystem);
         Sound_PlayEffect(SEQ_SE_DP_VS_SEEKER_BEEP);
-        VsSeeker_SetBattery(vsSeeker->varsFlags, 0);
+        SystemVars_SetVsSeekerBattery(vsSeeker->varsFlags, 0);
         VsSeekerSystem_SetState(vsSeeker, VS_SEEKER_STATE_WAIT_FOR_PLAYER_ANIM);
         break;
     case VS_SEEKER_STATE_WAIT_FOR_PLAYER_ANIM:
@@ -452,7 +452,7 @@ static BOOL VsSeeker_ExecuteTask(FieldTask *taskMan)
         }
         break;
     case VS_SEEKER_STATE_NO_BATTERY:
-        missingBattery = VS_SEEKER_MAX_BATTERY - VsSeeker_GetBattery(vsSeeker->varsFlags);
+        missingBattery = VS_SEEKER_MAX_BATTERY - SystemVars_GetVsSeekerBattery(vsSeeker->varsFlags);
 
         if (missingBattery / 10 == 0) {
             numDigits = 1;
@@ -483,7 +483,7 @@ static void VsSeekerSystem_SetState(VsSeekerSystem *vsSeeker, enum VsSeekerState
 
 static enum VsSeekerUsability VsSeekerSystem_CheckUsability(VsSeekerSystem *vsSeeker)
 {
-    if (VsSeeker_GetBattery(vsSeeker->varsFlags) == VS_SEEKER_MAX_BATTERY) {
+    if (SystemVars_GetVsSeekerBattery(vsSeeker->varsFlags) == VS_SEEKER_MAX_BATTERY) {
         if (vsSeeker->numVisibleTrainers == 0) {
             return VS_SEEKER_USABILITY_NO_TRAINERS;
         }
@@ -570,23 +570,23 @@ static BOOL VsSeeker_IsMoveCodeHidden(u32 moveCode)
 BOOL VsSeeker_UpdateStepCount(FieldSystem *fieldSystem)
 {
     VarsFlags *varsFlags = SaveData_GetVarsFlags(fieldSystem->saveData);
-    u16 battery = VsSeeker_GetBattery(varsFlags);
-    u16 activeStepCount = VsSeeker_GetActiveStepCount(varsFlags);
+    u16 battery = SystemVars_GetVsSeekerBattery(varsFlags);
+    u16 activeStepCount = SystemVars_GetVsSeekerStepCount(varsFlags);
 
     if (Bag_CanRemoveItem(SaveData_GetBag(fieldSystem->saveData), 443, 1, 4) == 1
         && battery < VS_SEEKER_MAX_BATTERY) {
         battery++;
-        VsSeeker_SetBattery(varsFlags, battery);
+        SystemVars_SetVsSeekerBattery(varsFlags, battery);
     }
 
     if (SystemFlag_CheckVsSeekerUsed(varsFlags) == TRUE) {
         if (activeStepCount < VS_SEEKER_MAX_NUM_ACTIVE_STEPS) {
             activeStepCount++;
-            VsSeeker_SetActiveStepCount(varsFlags, activeStepCount);
+            SystemVars_SetVsSeekerStepCount(varsFlags, activeStepCount);
         }
 
         if (activeStepCount == VS_SEEKER_MAX_NUM_ACTIVE_STEPS) {
-            VsSeeker_Reset(varsFlags);
+            SystemVars_ResetVsSeeker(varsFlags);
             VsSeeker_ClearRematchMoveCode(fieldSystem);
         }
     }
@@ -820,10 +820,10 @@ static BOOL VsSeeker_WaitForNpcsToPause(FieldSystem *fieldSystem)
         }
 
         if (MapObject_IsMoving(mapObj) == TRUE) {
-            sub_02062DDC(mapObj);
+            MapObject_SetPauseMovementOff(mapObj);
             anyMoving = TRUE;
         } else {
-            sub_02062DD0(mapObj);
+            MapObject_SetPauseMovementOn(mapObj);
         }
     }
 

@@ -1,11 +1,12 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/grand_lake_route_213_northwest_house.h"
 
     .data
 
     ScriptEntry _000E
     ScriptEntry _0068
     ScriptEntry _013A
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000E:
     PlayFanfare SEQ_SE_CONFIRM

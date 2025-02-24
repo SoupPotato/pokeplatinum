@@ -4,8 +4,9 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "constants/species.h"
-#include "consts/game_records.h"
+#include "generated/game_records.h"
+#include "generated/species.h"
+#include "generated/trainer_score_events.h"
 
 #include "struct_decls/struct_0202440C_decl.h"
 #include "struct_decls/struct_0202C878_decl.h"
@@ -37,6 +38,7 @@
 #include "savedata.h"
 #include "strbuf.h"
 #include "string_template.h"
+#include "system_vars.h"
 #include "text.h"
 #include "unk_0200F174.h"
 #include "unk_0202CC64.h"
@@ -46,7 +48,6 @@
 #include "unk_02038F8C.h"
 #include "unk_020393C8.h"
 #include "unk_02039814.h"
-#include "unk_0206AFE0.h"
 #include "unk_0206CCB0.h"
 #include "unk_020797C8.h"
 #include "vars_flags.h"
@@ -58,7 +59,7 @@ static void ov94_02242D38(UnkStruct_ov94_0223FD4C *param0);
 static void ov94_02242D74(UnkStruct_ov94_0223FD4C *param0);
 static void ov94_02242D84(UnkStruct_ov94_0223FD4C *param0);
 static void ov94_02242D98(UnkStruct_ov94_0223FD4C *param0);
-static void ov94_02243E48(Journal *param0, UnkStruct_ov94_0223BA88 *param1);
+static void ov94_02243E48(JournalEntry *param0, UnkStruct_ov94_0223BA88 *param1);
 static void ov94_0224362C(UnkStruct_ov94_0223FD4C *param0);
 static void ov94_02243E2C(UnkStruct_0202C878 *param0, UnkStruct_ov94_0223BA88 *param1);
 static void ov94_02243CE4(UnkStruct_ov94_0223FD4C *param0, Pokemon *param1, int param2);
@@ -1162,7 +1163,7 @@ static int ov94_02243990(UnkStruct_ov94_0223FD4C *param0)
     SaveData_SaveStateInit(param0->unk_00->unk_20, 2);
 
     param0->unk_2C = 31;
-    param0->unk_10E0 = inline_020564D0(60) + 2;
+    param0->unk_10E0 = LCRNG_RandMod(60) + 2;
 
     return 3;
 }
@@ -1289,8 +1290,8 @@ static void ov94_02243BC4(UnkStruct_ov94_0223FD4C *param0, Pokemon *param1, int 
             if (Pokemon_GetValue(param1, MON_DATA_FATEFUL_ENCOUNTER, NULL) || ((Pokemon_GetValue(param1, MON_DATA_HATCH_LOCATION, NULL) == 86) && (Pokemon_GetValue(param1, MON_DATA_FATEFUL_ENCOUNTER, NULL) == 0))) {
                 VarsFlags *v2 = SaveData_GetVarsFlags(param0->unk_00->unk_20);
 
-                if (sub_0206B5F8(v2) == 0) {
-                    sub_0206B608(v2, 1);
+                if (SystemVars_GetArceusEventState(v2) == 0) {
+                    SystemVars_SetArceusEventState(v2, 1);
                 }
             }
         }
@@ -1336,8 +1337,8 @@ static void ov94_02243CE4(UnkStruct_ov94_0223FD4C *param0, Pokemon *param1, int 
         if (Pokemon_GetValue(param1, MON_DATA_FATEFUL_ENCOUNTER, NULL) || ((Pokemon_GetValue(param1, MON_DATA_HATCH_LOCATION, NULL) == 86) && (Pokemon_GetValue(param1, MON_DATA_FATEFUL_ENCOUNTER, NULL) == 0))) {
             VarsFlags *v0 = SaveData_GetVarsFlags(param0->unk_00->unk_20);
 
-            if (sub_0206B5F8(v0) == 0) {
-                sub_0206B608(v0, 1);
+            if (SystemVars_GetArceusEventState(v0) == 0) {
+                SystemVars_SetArceusEventState(v0, 1);
             }
         }
     }
@@ -1392,15 +1393,15 @@ static void ov94_02243E2C(UnkStruct_0202C878 *param0, UnkStruct_ov94_0223BA88 *p
     sub_02038FDC(param0, param1->unk_11E, param1->unk_11F, param1->unk_123);
 }
 
-static void ov94_02243E48(Journal *param0, UnkStruct_ov94_0223BA88 *param1)
+static void ov94_02243E48(JournalEntry *journalEntry, UnkStruct_ov94_0223BA88 *param1)
 {
-    void *v0;
-    u16 v1[10 + 1];
-    Pokemon *v2 = (Pokemon *)param1->unk_00.unk_00;
+    void *journalEntryOnlineEvent;
+    u16 nickname[MON_NAME_LEN + 1];
+    Pokemon *mon = (Pokemon *)param1->unk_00.unk_00;
 
-    Pokemon_GetValue(v2, MON_DATA_NICKNAME, v1);
-    v0 = sub_0202C1EC(param1->unk_10C, param1->unk_F6, v1, Pokemon_GetGender(v2), 62);
-    Journal_SaveData(param0, v0, 4);
+    Pokemon_GetValue(mon, MON_DATA_NICKNAME, nickname);
+    journalEntryOnlineEvent = JournalEntry_CreateEventGotPokemonGTS(param1->unk_10C, param1->unk_F6, nickname, Pokemon_GetGender(mon), 62);
+    JournalEntry_SaveData(journalEntry, journalEntryOnlineEvent, JOURNAL_ONLINE_EVENT);
 }
 
 static int ov94_02243E84(UnkStruct_ov94_0223FD4C *param0, UnkStruct_ov94_0223BA88 *param1)

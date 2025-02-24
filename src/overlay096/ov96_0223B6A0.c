@@ -7,14 +7,13 @@
 #include "struct_defs/struct_0206BC70.h"
 #include "struct_defs/struct_02099F80.h"
 
-#include "overlay022/struct_ov22_022559F8.h"
 #include "overlay096/ov96_0223B140.h"
 #include "overlay096/ov96_0223BCE0.h"
 #include "overlay096/struct_ov96_0223BF40_decl.h"
 #include "overlay096/struct_ov96_0223BF40_t.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
+#include "char_transfer.h"
 #include "gx_layers.h"
 #include "heap.h"
 #include "inlines.h"
@@ -22,20 +21,20 @@
 #include "message.h"
 #include "narc.h"
 #include "overlay_manager.h"
+#include "pltt_transfer.h"
+#include "render_oam.h"
+#include "sprite.h"
 #include "sprite_resource.h"
+#include "sprite_transfer.h"
+#include "sprite_util.h"
 #include "string_template.h"
+#include "system.h"
 #include "unk_020041CC.h"
-#include "unk_020093B4.h"
-#include "unk_0200A328.h"
-#include "unk_0200A784.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
-#include "unk_0201E86C.h"
-#include "unk_0201F834.h"
 #include "unk_02033200.h"
 #include "unk_020393C8.h"
 #include "unk_02099550.h"
+#include "vram_transfer.h"
 
 static void ov96_0223B940(void *param0);
 static void ov96_0223B960(void);
@@ -63,7 +62,7 @@ int ov96_0223B6A0(OverlayManager *param0, int *param1)
 
     switch (*param1) {
     case 0:
-        SetMainCallback(NULL, NULL);
+        SetVBlankCallback(NULL, NULL);
         DisableHBlank();
         GXLayers_DisableEngineALayers();
         GXLayers_DisableEngineBLayers();
@@ -157,7 +156,7 @@ int ov96_0223B7F8(OverlayManager *param0, int *param1)
     }
 
     if (v0->unk_BF4 != NULL) {
-        CellActorCollection_Update(v0->unk_BF4);
+        SpriteList_Update(v0->unk_BF4);
     }
 
     return 0;
@@ -184,7 +183,7 @@ int ov96_0223B8CC(OverlayManager *param0, int *param1)
     sub_020334CC();
     Heap_FreeToHeap(v0->unk_04);
     OverlayManager_FreeData(param0);
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     Heap_Destroy(68);
 
     return 1;
@@ -194,8 +193,8 @@ static void ov96_0223B940(void *param0)
 {
     UnkStruct_ov96_0223BF40 *v0 = param0;
 
-    sub_0201DCAC();
-    sub_0200A858();
+    VramTransfer_Process();
+    RenderOam_Transfer();
 
     inline_ov61_0222C1FC(&v0->unk_FF8);
 
@@ -236,16 +235,16 @@ static void ov96_0223B99C(UnkStruct_ov96_0223BF40 *param0)
 static void ov96_0223B9A0(void)
 {
     {
-        UnkStruct_ov22_022559F8 v0 = {
+        CharTransferTemplate v0 = {
             20, 2048, 2048, 68
         };
 
-        sub_0201E86C(&v0);
+        CharTransfer_Init(&v0);
     }
 
-    sub_0201F834(20, 68);
-    sub_0201E994();
-    sub_0201F8E4();
+    PlttTransfer_Init(20, 68);
+    CharTransfer_ClearBuffers();
+    PlttTransfer_Clear();
 }
 
 static void ov96_0223B9D0(UnkStruct_ov96_0223BF40 *param0)
@@ -256,11 +255,11 @@ static void ov96_0223B9D0(UnkStruct_ov96_0223BF40 *param0)
     v1 = NARC_ctor(NARC_INDEX_GRAPHIC__WORLDTRADE, 68);
 
     NNS_G2dInitOamManagerModule();
-    sub_0200A784(0, 126, 0, 32, 0, 126, 0, 32, 68);
+    RenderOam_Init(0, 126, 0, 32, 0, 126, 0, 32, 68);
 
-    param0->unk_BF4 = sub_020095C4(10, &param0->unk_BF8, 68);
+    param0->unk_BF4 = SpriteList_InitRendering(10, &param0->unk_BF8, 68);
 
-    sub_0200964C(&param0->unk_BF8, 0, (256 * FX32_ONE));
+    SetSubScreenViewRect(&param0->unk_BF8, 0, (256 * FX32_ONE));
 
     for (v0 = 0; v0 < 4; v0++) {
         param0->unk_D84[v0] = SpriteResourceCollection_New(2, v0, 68);
@@ -271,8 +270,8 @@ static void ov96_0223B9D0(UnkStruct_ov96_0223BF40 *param0)
     param0->unk_D94[0][2] = SpriteResourceCollection_AddFrom(param0->unk_D84[2], v1, 36, 1, 0, 2, 68);
     param0->unk_D94[0][3] = SpriteResourceCollection_AddFrom(param0->unk_D84[3], v1, 37, 1, 0, 3, 68);
 
-    sub_0200A328(param0->unk_D94[0][0]);
-    sub_0200A5C8(param0->unk_D94[0][1]);
+    SpriteTransfer_RequestChar(param0->unk_D94[0][0]);
+    SpriteTransfer_RequestPlttWholeRange(param0->unk_D94[0][1]);
     NARC_dtor(v1);
 }
 
@@ -281,9 +280,9 @@ static const u16 Unk_ov96_0223DA80[][2] = {
     { 0xE0, 0x81 }
 };
 
-void ov96_0223BAE0(CellActorInitParamsEx *param0, UnkStruct_ov96_0223BF40 *param1, CellActorResourceData *param2, int param3)
+void ov96_0223BAE0(AffineSpriteListTemplate *param0, UnkStruct_ov96_0223BF40 *param1, SpriteResourcesHeader *param2, int param3)
 {
-    param0->collection = param1->unk_BF4;
+    param0->list = param1->unk_BF4;
     param0->resourceData = param2;
     param0->position.z = 0;
     param0->affineScale.x = FX32_ONE;
@@ -299,20 +298,20 @@ static void ov96_0223BB0C(UnkStruct_ov96_0223BF40 *param0)
 {
     int v0;
 
-    sub_020093B4(&param0->unk_DC4, 0, 0, 0, 0, 0xffffffff, 0xffffffff, 0, 0, param0->unk_D84[0], param0->unk_D84[1], param0->unk_D84[2], param0->unk_D84[3], NULL, NULL);
+    SpriteResourcesHeader_Init(&param0->unk_DC4, 0, 0, 0, 0, 0xffffffff, 0xffffffff, 0, 0, param0->unk_D84[0], param0->unk_D84[1], param0->unk_D84[2], param0->unk_D84[3], NULL, NULL);
 
     {
-        CellActorInitParamsEx v1;
+        AffineSpriteListTemplate v1;
 
         ov96_0223BAE0(&v1, param0, &param0->unk_DC4, NNS_G2D_VRAM_TYPE_2DMAIN);
 
         for (v0 = 0; v0 < 2; v0++) {
             v1.position.x = FX32_ONE * Unk_ov96_0223DA80[v0][0];
             v1.position.y = FX32_ONE * Unk_ov96_0223DA80[v0][1];
-            param0->unk_E30[v0] = CellActorCollection_AddEx(&v1);
-            CellActor_SetAnimateFlag(param0->unk_E30[v0], 1);
-            CellActor_SetAnim(param0->unk_E30[v0], v0);
-            CellActor_SetDrawFlag(param0->unk_E30[v0], 0);
+            param0->unk_E30[v0] = SpriteList_AddAffine(&v1);
+            Sprite_SetAnimateFlag(param0->unk_E30[v0], 1);
+            Sprite_SetAnim(param0->unk_E30[v0], v0);
+            Sprite_SetDrawFlag(param0->unk_E30[v0], 0);
         }
     }
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
@@ -398,25 +397,25 @@ static void ov96_0223BC64(UnkStruct_ov96_0223BF40 *param0)
     ov96_0223B9D0(param0);
     ov96_0223BB0C(param0);
 
-    SetMainCallback(ov96_0223B940, param0);
+    SetVBlankCallback(ov96_0223B940, param0);
 }
 
 static void ov96_0223BC8C(UnkStruct_ov96_0223BF40 *param0)
 {
     int v0;
 
-    sub_0200A4E4(param0->unk_D94[0][0]);
-    sub_0200A6DC(param0->unk_D94[0][1]);
+    SpriteTransfer_ResetCharTransfer(param0->unk_D94[0][0]);
+    SpriteTransfer_ResetPlttTransfer(param0->unk_D94[0][1]);
 
     for (v0 = 0; v0 < 4; v0++) {
         SpriteResourceCollection_Delete(param0->unk_D84[v0]);
     }
 
-    CellActorCollection_Delete(param0->unk_BF4);
+    SpriteList_Delete(param0->unk_BF4);
 
     param0->unk_BF4 = NULL;
 
-    sub_0200A878();
-    sub_0201E958();
-    sub_0201F8B4();
+    RenderOam_Free();
+    CharTransfer_Free();
+    PlttTransfer_Free();
 }

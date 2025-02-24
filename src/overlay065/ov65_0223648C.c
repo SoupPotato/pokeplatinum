@@ -3,14 +3,14 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_defs/struct_0200C738.h"
+#include "generated/journal_online_events.h"
+
 #include "struct_defs/struct_0207DE04.h"
 #include "struct_defs/struct_0207DFAC.h"
 #include "struct_defs/struct_0207E060.h"
 #include "struct_defs/struct_02099F80.h"
 
 #include "overlay004/ov4_021D0D80.h"
-#include "overlay022/struct_ov22_022559F8.h"
 #include "overlay063/ov63_0222BE18.h"
 #include "overlay063/ov63_0222CCE4.h"
 #include "overlay063/struct_ov63_0222BE18_decl.h"
@@ -23,10 +23,9 @@
 #include "overlay065/struct_ov65_022376D0.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
+#include "char_transfer.h"
 #include "communication_information.h"
 #include "communication_system.h"
-#include "core_sys.h"
 #include "enums.h"
 #include "font.h"
 #include "game_options.h"
@@ -39,26 +38,26 @@
 #include "message.h"
 #include "narc.h"
 #include "overlay_manager.h"
+#include "pltt_transfer.h"
+#include "render_oam.h"
 #include "render_window.h"
 #include "save_player.h"
+#include "sprite.h"
 #include "sprite_resource.h"
+#include "sprite_util.h"
 #include "strbuf.h"
 #include "string_template.h"
+#include "system.h"
 #include "text.h"
 #include "trainer_info.h"
 #include "unk_020041CC.h"
 #include "unk_02005474.h"
-#include "unk_020093B4.h"
-#include "unk_0200A784.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
-#include "unk_0201E86C.h"
-#include "unk_0201F834.h"
 #include "unk_020363E8.h"
 #include "unk_020366A0.h"
 #include "unk_020393C8.h"
 #include "unk_0209C390.h"
+#include "vram_transfer.h"
 
 FS_EXTERN_OVERLAY(overlay63);
 
@@ -103,8 +102,8 @@ typedef struct {
     u8 unk_14;
     u8 unk_15;
     u16 unk_16;
-    CellActorCollection *unk_18;
-    UnkStruct_0200C738 unk_1C;
+    SpriteList *unk_18;
+    G2dRenderer unk_1C;
     SpriteResourceCollection *unk_1A8[4];
     UnkStruct_ov63_0222BE18 *unk_1B8;
     UnkStruct_ov63_0222CD2C *unk_1BC;
@@ -191,7 +190,7 @@ static void ov65_02237940(UnkStruct_ov65_022367A8 *param0, UnkStruct_ov65_022379
 static void ov65_0223796C(UnkStruct_ov65_022367A8 *param0, UnkStruct_ov65_02237908 *param1);
 static void ov65_02237970(UnkStruct_ov65_022367A8 *param0);
 static BOOL ov65_02237A10(UnkStruct_ov65_022367A8 *param0);
-static void ov65_02237A24(UnkStruct_0207DE04 *param0, u32 param1);
+static void ov65_02237A24(UnkStruct_0207DE04 *param0, u32 heapID);
 static void ov65_02237A44(UnkStruct_ov65_022367A8 *param0);
 static BOOL ov65_02237A54(UnkStruct_ov65_022367A8 *param0);
 static BOOL ov65_02237A70(UnkStruct_ov65_022367A8 *param0, UnkStruct_0207DE04 *param1, u32 param2);
@@ -406,7 +405,7 @@ int ov65_0223648C(OverlayManager *param0, int *param1)
     MI_CpuFill8(v0->unk_00.unk_1C, 1, sizeof(u8) * 4);
     MI_CpuFill8(v0->unk_00.unk_20, 1, sizeof(u8) * 4);
 
-    VRAMTransferManager_New(16, 96);
+    VramTransfer_New(16, 96);
 
     v0->unk_00.unk_00 = sub_020388E8();
     v0->unk_00.unk_00->unk_00.unk_21 = v0->unk_00.unk_00->unk_00.unk_22;
@@ -418,7 +417,7 @@ int ov65_0223648C(OverlayManager *param0, int *param1)
     ov65_0223760C(v0);
     ov65_022367A8(v0, v1, 96);
 
-    SetMainCallback(ov65_02236780, v0);
+    SetVBlankCallback(ov65_02236780, v0);
     sub_02039734();
 
     v0->unk_00.unk_27 = 1;
@@ -488,7 +487,7 @@ int ov65_02236548(OverlayManager *param0, int *param1)
     }
 
     ov65_022372B0(&v0->unk_30);
-    CellActorCollection_Update(v0->unk_30.unk_18);
+    SpriteList_Update(v0->unk_30.unk_18);
 
     return 0;
 }
@@ -498,14 +497,14 @@ int ov65_0223668C(OverlayManager *param0, int *param1)
     UnkStruct_ov65_022367A8 *v0 = OverlayManager_Data(param0);
     UnkStruct_0207DE04 *v1 = OverlayManager_Args(param0);
 
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
 
     ov65_0223761C(v0);
     ov65_022377E8(v0);
     ov65_02237504(v0);
     ov65_022367F8(v0, 96);
 
-    VRAMTransferManager_Destroy();
+    VramTransfer_Free();
     OverlayManager_FreeData(param0);
     Heap_Destroy(97);
     Heap_Destroy(96);
@@ -567,8 +566,8 @@ static void ov65_02236780(void *param0)
     UnkStruct_ov65_022367A8 *v0 = param0;
 
     Bg_RunScheduledUpdates(v0->unk_30.unk_00);
-    sub_0201DCAC();
-    sub_0200A858();
+    VramTransfer_Process();
+    RenderOam_Transfer();
 }
 
 static BOOL ov65_02236794(const UnkStruct_ov65_02236794 *param0)
@@ -834,24 +833,24 @@ static void ov65_02236D50(UnkStruct_ov65_02236840 *param0, u32 param1)
     int v0;
 
     NNS_G2dInitOamManagerModule();
-    sub_0200A784(0, 126, 0, 31, 0, 126, 0, 31, param1);
+    RenderOam_Init(0, 126, 0, 31, 0, 126, 0, 31, param1);
 
     {
-        UnkStruct_ov22_022559F8 v1 = {
+        CharTransferTemplate v1 = {
             4, (128 * 1024), (16 * 1024), 0
         };
 
-        v1.unk_0C = param1;
-        sub_0201E88C(&v1, GX_OBJVRAMMODE_CHAR_1D_128K, GX_OBJVRAMMODE_CHAR_1D_32K);
+        v1.heapID = param1;
+        CharTransfer_InitWithVramModes(&v1, GX_OBJVRAMMODE_CHAR_1D_128K, GX_OBJVRAMMODE_CHAR_1D_32K);
     }
 
-    sub_0201F834(4, param1);
-    sub_0201E994();
-    sub_0201F8E4();
-    sub_0200966C(NNS_G2D_VRAM_TYPE_2DMAIN, GX_OBJVRAMMODE_CHAR_1D_128K);
-    sub_02009704(NNS_G2D_VRAM_TYPE_2DMAIN);
+    PlttTransfer_Init(4, param1);
+    CharTransfer_ClearBuffers();
+    PlttTransfer_Clear();
+    ReserveVramForWirelessIconChars(NNS_G2D_VRAM_TYPE_2DMAIN, GX_OBJVRAMMODE_CHAR_1D_128K);
+    ReserveSlotsForWirelessIconPalette(NNS_G2D_VRAM_TYPE_2DMAIN);
 
-    param0->unk_18 = sub_020095C4(4, &param0->unk_1C, param1);
+    param0->unk_18 = SpriteList_InitRendering(4, &param0->unk_1C, param1);
 
     for (v0 = 0; v0 < 4; v0++) {
         param0->unk_1A8[v0] = SpriteResourceCollection_New(4, v0, param1);
@@ -868,15 +867,15 @@ static void ov65_02236E04(UnkStruct_ov65_02236840 *param0)
     ov63_0222CD9C(param0->unk_1BC);
     ov63_0222BE58(param0->unk_1B8);
 
-    CellActorCollection_Delete(param0->unk_18);
+    SpriteList_Delete(param0->unk_18);
 
     for (v0 = 0; v0 < 4; v0++) {
         SpriteResourceCollection_Delete(param0->unk_1A8[v0]);
     }
 
-    sub_0201E958();
-    sub_0201F8B4();
-    sub_0200A878();
+    CharTransfer_Free();
+    PlttTransfer_Free();
+    RenderOam_Free();
 }
 
 static void ov65_02236E44(UnkStruct_ov65_02236840 *param0, const UnkStruct_0207DE04 *param1, u32 param2, u32 param3)
@@ -1096,7 +1095,7 @@ static void ov65_022372EC(UnkStruct_ov65_02236840 *param0, u32 param1)
 
     v2 = Unk_ov65_02239C04[param1];
     v1 = param0->unk_254->pRawData;
-    v0 = sub_0201DC68(NNS_GFD_DST_2D_BG_PLTT_MAIN, 0 * 32, &v1[v2 * 16], 32);
+    v0 = VramTransfer_Request(NNS_GFD_DST_2D_BG_PLTT_MAIN, 0 * 32, &v1[v2 * 16], 32);
 
     GF_ASSERT(v0);
 }
@@ -1602,16 +1601,16 @@ static BOOL ov65_02237A10(UnkStruct_ov65_022367A8 *param0)
     return 0;
 }
 
-static void ov65_02237A24(UnkStruct_0207DE04 *param0, u32 param1)
+static void ov65_02237A24(UnkStruct_0207DE04 *param0, u32 heapID)
 {
-    void *v0;
-    Journal *v1;
+    void *journalEntryOnlineEvent;
+    JournalEntry *journalEntry;
     UnkStruct_0207E060 *v2;
 
-    v1 = SaveData_GetJournal(param0->unk_08);
-    v0 = sub_0202C244(param1, 29);
+    journalEntry = SaveData_GetJournal(param0->unk_08);
+    journalEntryOnlineEvent = JournalEntry_CreateEventMisc(heapID, ONLINE_EVENT_WIFI_CLUB);
 
-    Journal_SaveData(v1, v0, 4);
+    JournalEntry_SaveData(journalEntry, journalEntryOnlineEvent, JOURNAL_ONLINE_EVENT);
 }
 
 static void ov65_02237A44(UnkStruct_ov65_022367A8 *param0)
@@ -1692,7 +1691,7 @@ static BOOL ov65_02237AC0(UnkStruct_ov65_022367A8 *param0, UnkStruct_0207DE04 *p
     }
 
     do {
-        if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+        if (gSystem.pressedKeys & PAD_BUTTON_A) {
             Sound_PlayEffect(1501);
 
             if (ov65_02237450(param0) == 0) {
@@ -1709,7 +1708,7 @@ static BOOL ov65_02237AC0(UnkStruct_ov65_022367A8 *param0, UnkStruct_0207DE04 *p
             }
         }
 
-        if (gCoreSys.pressedKeys & PAD_BUTTON_B) {
+        if (gSystem.pressedKeys & PAD_BUTTON_B) {
             Sound_PlayEffect(1501);
             param0->unk_00.unk_05 = 22;
             break;
@@ -1721,7 +1720,7 @@ static BOOL ov65_02237AC0(UnkStruct_ov65_022367A8 *param0, UnkStruct_0207DE04 *p
             break;
         }
 
-        if (gCoreSys.pressedKeys & PAD_BUTTON_X) {
+        if (gSystem.pressedKeys & PAD_BUTTON_X) {
             param0->unk_00.unk_05 = 30;
             Sound_PlayEffect(1501);
             break;
@@ -2427,7 +2426,7 @@ static BOOL ov65_022383D0(UnkStruct_ov65_022367A8 *param0, UnkStruct_0207DE04 *p
         ov65_0223789C(param0);
         param0->unk_00.unk_05 = 11;
     } else {
-        if (gCoreSys.pressedKeys & PAD_BUTTON_X) {
+        if (gSystem.pressedKeys & PAD_BUTTON_X) {
             ov65_022378C4(param0, param1, param2);
             param0->unk_00.unk_05 = 18;
         }

@@ -4,6 +4,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/screen.h"
+
 #include "struct_decls/struct_0202B370_decl.h"
 #include "struct_defs/struct_02017498.h"
 #include "struct_defs/struct_02099F80.h"
@@ -12,7 +14,6 @@
 #include "overlay061/struct_ov61_0222C3B0.h"
 
 #include "bg_window.h"
-#include "core_sys.h"
 #include "font.h"
 #include "game_options.h"
 #include "graphics.h"
@@ -24,23 +25,23 @@
 #include "message.h"
 #include "narc.h"
 #include "overlay_manager.h"
+#include "render_oam.h"
 #include "render_text.h"
 #include "render_window.h"
 #include "save_player.h"
 #include "strbuf.h"
 #include "string_list.h"
 #include "string_template.h"
+#include "system.h"
 #include "system_data.h"
 #include "text.h"
-#include "unk_0200A784.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
 #include "unk_0201E3D8.h"
 #include "unk_0202ACE0.h"
 #include "unk_020366A0.h"
 #include "unk_02038FFC.h"
 #include "unk_020393C8.h"
+#include "vram_transfer.h"
 
 typedef struct {
     UnkStruct_02017498 *unk_00;
@@ -140,7 +141,7 @@ int ov61_0222BF44(OverlayManager *param0, int *param1)
 {
     UnkStruct_ov61_0222C664 *v0;
 
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     DisableHBlank();
     GXLayers_DisableEngineALayers();
     GXLayers_DisableEngineBLayers();
@@ -159,7 +160,7 @@ int ov61_0222BF44(OverlayManager *param0, int *param1)
     v0->unk_00 = OverlayManager_Args(param0);
     v0->unk_04 = BgConfig_New(117);
 
-    VRAMTransferManager_New(64, 117);
+    VramTransfer_New(64, 117);
     SetAutorepeat(4, 8);
     ov61_0222C224(v0->unk_04);
     sub_0201E3D8();
@@ -183,13 +184,13 @@ int ov61_0222BF44(OverlayManager *param0, int *param1)
     GXLayers_EngineBToggleLayers(GX_PLANEMASK_BG0, 1);
     GXLayers_EngineBToggleLayers(GX_PLANEMASK_BG1, 1);
 
-    gCoreSys.unk_65 = 0;
+    gSystem.whichScreenIs3D = DS_SCREEN_MAIN;
 
     GXLayers_SwapDisplay();
     RenderControlFlags_SetCanABSpeedUpPrint(1);
     RenderControlFlags_SetAutoScrollFlags(0);
     RenderControlFlags_SetSpeedUpOnTouch(0);
-    SetMainCallback(ov61_0222C1FC, v0);
+    SetVBlankCallback(ov61_0222C1FC, v0);
 
     if (v0->unk_00->unk_10) {
         sub_02039734();
@@ -258,9 +259,9 @@ int ov61_0222C160(OverlayManager *param0, int *param1)
     ov61_0222C70C(v0);
     Heap_FreeToHeap(v0->unk_04);
     ov61_0222C38C(v0->unk_04);
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     DisableHBlank();
-    VRAMTransferManager_Destroy();
+    VramTransfer_Free();
     sub_0201E530();
     RenderControlFlags_SetCanABSpeedUpPrint(0);
     RenderControlFlags_SetAutoScrollFlags(0);
@@ -276,8 +277,8 @@ static void ov61_0222C1FC(void *param0)
 {
     UnkStruct_ov61_0222C664 *v0 = param0;
 
-    sub_0201DCAC();
-    sub_0200A858();
+    VramTransfer_Process();
+    RenderOam_Transfer();
     Bg_RunScheduledUpdates(v0->unk_04);
 
     inline_ov61_0222C1FC(&v0->unk_A4);
@@ -833,7 +834,7 @@ static int ov61_0222CC40(UnkStruct_ov61_0222C664 *param0)
 
 static int ov61_0222CC64(UnkStruct_ov61_0222C664 *param0)
 {
-    if (gCoreSys.pressedKeys & PAD_BUTTON_A || gCoreSys.pressedKeys & PAD_BUTTON_B) {
+    if (gSystem.pressedKeys & PAD_BUTTON_A || gSystem.pressedKeys & PAD_BUTTON_B) {
         Window_EraseStandardFrame(&param0->unk_64, 0);
         param0->unk_90 = 0;
 

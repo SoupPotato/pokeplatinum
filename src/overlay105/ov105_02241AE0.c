@@ -3,9 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/sprite_decl.h"
 #include "struct_decls/struct_02007768_decl.h"
-#include "struct_decls/struct_party_decl.h"
+#include "struct_defs/pokemon_sprite.h"
 #include "struct_defs/struct_0207C690.h"
 #include "struct_defs/struct_02099F80.h"
 
@@ -26,10 +25,8 @@
 #include "overlay105/struct_ov105_02246060_decl.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
 #include "communication_information.h"
 #include "communication_system.h"
-#include "core_sys.h"
 #include "font.h"
 #include "game_options.h"
 #include "game_overlay.h"
@@ -43,26 +40,27 @@
 #include "palette.h"
 #include "party.h"
 #include "pokemon.h"
+#include "render_oam.h"
 #include "render_window.h"
 #include "save_player.h"
 #include "savedata.h"
+#include "sprite.h"
+#include "sprite_util.h"
 #include "strbuf.h"
 #include "string_list.h"
 #include "string_template.h"
+#include "system.h"
 #include "text.h"
 #include "trainer_info.h"
 #include "unk_02005474.h"
 #include "unk_0200762C.h"
-#include "unk_020093B4.h"
-#include "unk_0200A784.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
 #include "unk_02024220.h"
 #include "unk_020363E8.h"
 #include "unk_020393C8.h"
 #include "unk_0207A274.h"
 #include "unk_0209BA80.h"
+#include "vram_transfer.h"
 
 #include "constdata/const_020F410C.h"
 
@@ -106,7 +104,7 @@ struct UnkStruct_ov105_02241FF4_t {
     PaletteData *unk_120;
     GenericPointerData *unk_124;
     UnkStruct_02007768 *unk_128;
-    Sprite *unk_12C[3];
+    PokemonSprite *unk_12C[3];
     Options *unk_138;
     SaveData *unk_13C;
     PokemonSummary *unk_140;
@@ -573,7 +571,7 @@ int ov105_02241BD8(OverlayManager *param0, int *param1)
         break;
     }
 
-    CellActorCollection_Update(v0->unk_144.unk_00);
+    SpriteList_Update(v0->unk_144.unk_00);
     ov105_02245D50(v0->unk_128);
 
     return 0;
@@ -602,7 +600,7 @@ int ov105_02241F54(OverlayManager *param0, int *param1)
     ov105_022451B4(v1);
 
     OverlayManager_FreeData(param0);
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     Heap_Destroy(93);
     Overlay_UnloadByID(FS_OVERLAY_ID(overlay104));
 
@@ -812,9 +810,9 @@ static void ov105_022424CC(UnkStruct_ov105_02241FF4 *param0)
     ov105_0224628C(&param0->unk_50[5], Options_Frame(param0->unk_138));
 
     if (ov104_0223AED4(param0->unk_09) == 0) {
-        param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1A, ((NELEMS(Unk_ov105_02246340)) - 1), 2, param0->unk_334, Unk_ov105_02246340, Unk_ov105_022462D0);
+        param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1A, (NELEMS(Unk_ov105_02246340) - 1), 2, param0->unk_334, Unk_ov105_02246340, Unk_ov105_022462D0);
     } else {
-        param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1A, ((NELEMS(Unk_ov105_022462FC)) - 1), 2, param0->unk_334, Unk_ov105_022462FC, Unk_ov105_022462CC);
+        param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1A, (NELEMS(Unk_ov105_022462FC) - 1), 2, param0->unk_334, Unk_ov105_022462FC, Unk_ov105_022462CC);
     }
 
     ov105_02244F0C(param0, &param0->unk_50[0], 0, 0, 0);
@@ -863,7 +861,7 @@ static BOOL ov105_02242698(UnkStruct_ov105_02241FF4 *param0)
     case 0:
 
         if (OverlayManager_Exec(param0->unk_04) == 1) {
-            param0->unk_334 = param0->unk_140->pos;
+            param0->unk_334 = param0->unk_140->monIndex;
             Heap_FreeToHeap(param0->unk_140);
             Heap_FreeToHeap(param0->unk_04);
             param0->unk_04 = NULL;
@@ -895,19 +893,19 @@ static BOOL ov105_022426E0(UnkStruct_ov105_02241FF4 *param0)
     case 1:
         ov105_02246080(param0->unk_30C);
 
-        if (gCoreSys.pressedKeys & (PAD_KEY_LEFT | PAD_KEY_RIGHT)) {
+        if (gSystem.pressedKeys & (PAD_KEY_LEFT | PAD_KEY_RIGHT)) {
             Sound_PlayEffect(1500);
             ov105_022453F8(param0, param0->unk_11, ov105_022461A0(param0->unk_30C), 0, param0->unk_31C);
         }
 
-        if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+        if (gSystem.pressedKeys & PAD_BUTTON_A) {
             Sound_PlayEffect(1500);
             ov105_022461A4(param0->unk_30C, 1);
             ov105_02244DF0(param0);
 
             param0->unk_310 = ov105_02245FB8(&param0->unk_144, (NELEMS(Unk_ov105_02246308)), (NELEMS(Unk_ov105_02246308)), 1, 0, Unk_ov105_02246308, NULL);
             param0->unk_08++;
-        } else if (gCoreSys.pressedKeys & PAD_BUTTON_B) {
+        } else if (gSystem.pressedKeys & PAD_BUTTON_B) {
             if (param0->unk_11 > 0) {
                 Sound_PlayEffect(1500);
                 ov105_0224296C(param0);
@@ -1426,12 +1424,12 @@ static BOOL ov105_022434BC(UnkStruct_ov105_02241FF4 *param0)
     case 1:
         ov105_02246080(param0->unk_30C);
 
-        if (gCoreSys.pressedKeys & (PAD_KEY_LEFT | PAD_KEY_RIGHT | PAD_KEY_UP | PAD_KEY_DOWN)) {
+        if (gSystem.pressedKeys & (PAD_KEY_LEFT | PAD_KEY_RIGHT | PAD_KEY_UP | PAD_KEY_DOWN)) {
             Sound_PlayEffect(1500);
             ov105_022453F8(param0, param0->unk_11, ov105_022461A0(param0->unk_30C), 1, param0->unk_31C);
         }
 
-        if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+        if (gSystem.pressedKeys & PAD_BUTTON_A) {
             Sound_PlayEffect(1500);
 
             if (ov105_022461A0(param0->unk_30C) == (param0->unk_1A - 1)) {
@@ -1444,7 +1442,7 @@ static BOOL ov105_022434BC(UnkStruct_ov105_02241FF4 *param0)
                 param0->unk_310 = ov105_02245FB8(&param0->unk_144, (NELEMS(Unk_ov105_02246308)), (NELEMS(Unk_ov105_02246308)), 1, 0, Unk_ov105_02246308, NULL);
                 param0->unk_08++;
             }
-        } else if (gCoreSys.pressedKeys & PAD_BUTTON_B) {
+        } else if (gSystem.pressedKeys & PAD_BUTTON_B) {
             Sound_PlayEffect(1500);
             ov105_02245528(param0, 1);
             return 1;
@@ -1625,9 +1623,9 @@ static BOOL ov105_02243A3C(UnkStruct_ov105_02241FF4 *param0)
         Window_ScheduleCopyToVRAM(&param0->unk_50[7]);
 
         if (ov104_0223AED4(param0->unk_09) == 0) {
-            param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1B, ((NELEMS(Unk_ov105_02246350)) - 2), 2, 0, Unk_ov105_02246350, Unk_ov105_022462D4);
+            param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1B, (NELEMS(Unk_ov105_02246350) - 2), 2, 0, Unk_ov105_02246350, Unk_ov105_022462D4);
         } else {
-            param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1B, ((NELEMS(Unk_ov105_0224637C)) - 2), 2, 0, Unk_ov105_0224637C, Unk_ov105_022462E4);
+            param0->unk_30C = ov105_02245FB8(&param0->unk_144, param0->unk_1B, (NELEMS(Unk_ov105_0224637C) - 2), 2, 0, Unk_ov105_0224637C, Unk_ov105_022462E4);
         }
 
         v3 = ov105_022461A0(param0->unk_30C);
@@ -1642,17 +1640,17 @@ static BOOL ov105_02243A3C(UnkStruct_ov105_02241FF4 *param0)
     case 1:
         ov105_02246080(param0->unk_30C);
 
-        if (gCoreSys.pressedKeys & (PAD_KEY_UP | PAD_KEY_DOWN)) {
+        if (gSystem.pressedKeys & (PAD_KEY_UP | PAD_KEY_DOWN)) {
             Sound_PlayEffect(1500);
             ov105_022453F8(param0, 0, ov105_022461A0(param0->unk_30C), 0, param0->unk_320);
         }
 
-        if (gCoreSys.pressedKeys & (PAD_KEY_LEFT | PAD_KEY_RIGHT)) {
+        if (gSystem.pressedKeys & (PAD_KEY_LEFT | PAD_KEY_RIGHT)) {
             Sound_PlayEffect(1500);
             ov105_022453F8(param0, 0, ov105_022461A0(param0->unk_30C), 0, param0->unk_320);
         }
 
-        if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+        if (gSystem.pressedKeys & PAD_BUTTON_A) {
             Sound_PlayEffect(1500);
 
             if (ov105_022461A0(param0->unk_30C) == (param0->unk_1B - 1)) {
@@ -1669,7 +1667,7 @@ static BOOL ov105_02243A3C(UnkStruct_ov105_02241FF4 *param0)
                 param0->unk_10 = ov105_02244D14(param0, 14);
                 param0->unk_08++;
             }
-        } else if (gCoreSys.pressedKeys & PAD_BUTTON_B) {
+        } else if (gSystem.pressedKeys & PAD_BUTTON_B) {
             Sound_PlayEffect(1500);
             ov105_02245528(param0, 1);
             return 1;
@@ -2133,8 +2131,8 @@ static void ov105_0224451C(void *param0)
     }
 
     Bg_RunScheduledUpdates(v0->unk_4C);
-    sub_0201DCAC();
-    sub_0200A858();
+    VramTransfer_Process();
+    RenderOam_Transfer();
 
     OS_SetIrqCheckFlag(OS_IE_V_BLANK);
 }
@@ -2820,7 +2818,7 @@ static void ov105_022452A0(UnkStruct_ov105_02241FF4 *param0)
 
 static void ov105_022452E4(void)
 {
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     SetHBlankCallback(NULL, NULL);
 
     GXLayers_DisableEngineALayers();
@@ -2856,8 +2854,8 @@ static void ov105_0224531C(UnkStruct_ov105_02241FF4 *param0)
     param0->unk_128 = sub_0200762C(93);
 
     if (CommSys_IsInitialized()) {
-        sub_0200966C(NNS_G2D_VRAM_TYPE_2DMAIN, GX_OBJVRAMMODE_CHAR_1D_32K);
-        sub_02009704(NNS_G2D_VRAM_TYPE_2DMAIN);
+        ReserveVramForWirelessIconChars(NNS_G2D_VRAM_TYPE_2DMAIN, GX_OBJVRAMMODE_CHAR_1D_32K);
+        ReserveSlotsForWirelessIconPalette(NNS_G2D_VRAM_TYPE_2DMAIN);
         sub_02039734();
     }
 
@@ -2870,7 +2868,7 @@ static void ov105_0224531C(UnkStruct_ov105_02241FF4 *param0)
     }
 
     GXLayers_TurnBothDispOn();
-    SetMainCallback(ov105_0224451C, (void *)param0);
+    SetVBlankCallback(ov105_0224451C, (void *)param0);
 
     return;
 }
@@ -2895,10 +2893,10 @@ static void ov105_02245464(UnkStruct_ov105_02241FF4 *param0)
 
     param0->unk_140->monData = param0->unk_31C;
     param0->unk_140->options = param0->unk_138;
-    param0->unk_140->dataType = 1;
-    param0->unk_140->mode = 1;
-    param0->unk_140->max = param0->unk_12;
-    param0->unk_140->pos = ov105_022461A0(param0->unk_30C);
+    param0->unk_140->dataType = SUMMARY_DATA_PARTY_MON;
+    param0->unk_140->mode = SUMMARY_MODE_LOCK_MOVES;
+    param0->unk_140->monMax = param0->unk_12;
+    param0->unk_140->monIndex = ov105_022461A0(param0->unk_30C);
     param0->unk_140->move = 0;
     param0->unk_140->dexMode = sub_0207A274(param0->unk_13C);
     param0->unk_140->showContest = FALSE;
@@ -3016,7 +3014,7 @@ static void ov105_022455C4(UnkStruct_ov105_02241FF4 *param0, u8 param1, Pokemon 
     v0 = Pokemon_GetValue(param2, MON_DATA_SPECIES, NULL);
     v1 = Pokemon_GetValue(param2, MON_DATA_FORM, NULL);
 
-    if (PokemonPersonalData_GetFormValue(v0, v1, 28) == 0) {
+    if (SpeciesData_GetFormValue(v0, v1, 28) == 0) {
         ov105_02245DB8(param0->unk_12C[param1], param5);
     }
 

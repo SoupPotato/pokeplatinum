@@ -1,10 +1,11 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/great_marsh_6.h"
 
     .data
 
     ScriptEntry _000A
     ScriptEntry _00D1
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000A:
     PlayFanfare SEQ_SE_CONFIRM

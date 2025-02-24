@@ -242,7 +242,7 @@ void sub_020645C0(MapObject *mapObj)
         }
     }
 
-    sub_02064208(mapObj);
+    MapObject_UpdateCoords(mapObj);
 }
 
 void sub_02064624(MapObject *mapObj)
@@ -294,7 +294,7 @@ void sub_02064690(MapObject *mapObj)
     switch (v1->unk_00) {
     case 0:
         sub_02062D10(mapObj);
-        sub_02062D34(mapObj);
+        MapObject_SetEndMovementOff(mapObj);
 
         v0 = MapObject_GetFacingDir(mapObj);
         v0 = sub_02065838(v0, 0x0);
@@ -433,7 +433,7 @@ static int sub_0206489C(MapObject *mapObj, int param1)
     sub_020647A0(mapObj, &v2);
 
     v0 = MapObject_GetX(mapObj) + MapObject_GetDxFromDir(param1);
-    v1 = MapObject_GetZ(mapObj) + MapObject_GetDyFromDir(param1);
+    v1 = MapObject_GetZ(mapObj) + MapObject_GetDzFromDir(param1);
 
     if ((v2.unk_00 > v0) || (v2.unk_08 < v0)) {
         return 0;
@@ -455,7 +455,7 @@ static void sub_020648F4(MapObject *mapObj, int param1)
 
     sub_02062A0C(mapObj, 0x0);
     sub_02062D10(mapObj);
-    sub_02064208(mapObj);
+    MapObject_UpdateCoords(mapObj);
 }
 
 void sub_02064918(MapObject *mapObj)
@@ -503,7 +503,7 @@ static void sub_0206496C(MapObject *mapObj, int param1)
 
     sub_02062A0C(mapObj, 0x0);
     sub_02062D10(mapObj);
-    sub_02064208(mapObj);
+    MapObject_UpdateCoords(mapObj);
 }
 
 void sub_02064990(MapObject *mapObj)

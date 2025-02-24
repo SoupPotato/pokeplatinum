@@ -7,7 +7,6 @@
 
 #include "bg_window.h"
 #include "camera.h"
-#include "cell_actor.h"
 #include "game_options.h"
 #include "game_records.h"
 #include "journal.h"
@@ -15,6 +14,7 @@
 #include "menu.h"
 #include "message.h"
 #include "savedata.h"
+#include "sprite.h"
 #include "strbuf.h"
 #include "string_list.h"
 #include "string_template.h"
@@ -34,12 +34,12 @@ typedef struct {
     StringTemplate *unk_8C;
     Camera *camera;
     UnkStruct_ov5_021D30A8 unk_94;
-    CellActor *unk_25C[4];
+    Sprite *unk_25C[4];
     u16 unk_26C[2];
     TrainerInfo *unk_270;
     void *unk_274;
     Options *unk_278;
-    Journal *unk_27C;
+    JournalEntry *unk_27C;
     GameRecords *records;
     SaveData *unk_284;
     VarsFlags *unk_288;

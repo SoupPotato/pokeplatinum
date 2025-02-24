@@ -14,8 +14,7 @@
 #include "savedata/save_table.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
-#include "core_sys.h"
+#include "boot.h"
 #include "font.h"
 #include "game_start.h"
 #include "graphics.h"
@@ -26,25 +25,25 @@
 #include "message_util.h"
 #include "overlay_manager.h"
 #include "play_time.h"
+#include "pokedex.h"
+#include "render_oam.h"
 #include "render_window.h"
 #include "save_player.h"
 #include "savedata.h"
+#include "sprite.h"
 #include "strbuf.h"
 #include "string_template.h"
+#include "system.h"
 #include "system_data.h"
 #include "text.h"
 #include "trainer_info.h"
 #include "unk_020041CC.h"
 #include "unk_02005474.h"
-#include "unk_0200A784.h"
 #include "unk_0200F174.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
-#include "unk_02024358.h"
-#include "unk_0202631C.h"
 #include "unk_0202DAB4.h"
 #include "unk_020366A0.h"
 #include "unk_0209A74C.h"
+#include "vram_transfer.h"
 
 FS_EXTERN_OVERLAY(game_start);
 FS_EXTERN_OVERLAY(overlay77);
@@ -82,7 +81,7 @@ typedef struct {
 typedef struct {
     BgConfig *unk_00;
     SaveData *unk_04;
-    PokedexData *unk_08;
+    Pokedex *unk_08;
     TrainerInfo *unk_0C;
     PlayTime *playTime;
     MysteryGift *unk_14;
@@ -119,7 +118,7 @@ typedef struct {
     int unk_150;
     BOOL unk_154[1];
     Window unk_158;
-    CellActor *unk_168[2];
+    Sprite *unk_168[2];
     int unk_170;
 } UnkStruct_0222AE60;
 
@@ -192,7 +191,7 @@ static BOOL ov97_0222AE64(UnkStruct_0222AE60 *param0)
             }
         }
     } else {
-        if (gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B)) {
+        if (gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B)) {
             Sound_PlayEffect(1500);
             Window_EraseStandardFrame(&param0->unk_158, 0);
             Window_Remove(&param0->unk_158);
@@ -235,7 +234,7 @@ static void ov97_0222AF1C(UnkStruct_0222AE60 *param0)
         break;
     }
 
-    sub_02017B70(v0);
+    SetGBACartridgeVersion(v0);
 
     if (Pokedex_IsNationalDexObtained(param0->unk_08) == FALSE) {
         return;
@@ -377,10 +376,10 @@ static BOOL ov97_0222B07C(UnkStruct_0222AE60 *param0)
         if (param0->unk_134) {
             param0->unk_134--;
         } else {
-            if (gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B)) {
+            if (gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B)) {
                 Window_Remove(&param0->unk_13C);
                 param0->unk_12C = 19;
-                param0->unk_138 = gCoreSys.pressedKeys;
+                param0->unk_138 = gSystem.pressedKeys;
                 Sound_PlayEffect(1500);
             }
         }
@@ -479,10 +478,10 @@ static void ov97_0222B404(UnkStruct_0222AE60 *param0)
     ov97_02237B0C(116, 43, 40, 42, 41, 0);
 
     param0->unk_168[0] = ov97_02237D14(0, param0->unk_168[0], HW_LCD_WIDTH / 2, 8, 0);
-    CellActor_SetDrawFlag(param0->unk_168[0], 0);
+    Sprite_SetDrawFlag(param0->unk_168[0], 0);
 
     param0->unk_168[1] = ov97_02237D14(0, param0->unk_168[1], HW_LCD_WIDTH / 2, HW_LCD_HEIGHT - 8, 1);
-    CellActor_SetDrawFlag(param0->unk_168[1], 0);
+    Sprite_SetDrawFlag(param0->unk_168[1], 0);
 }
 
 static void ov97_0222B46C(UnkStruct_0222AE60 *param0)
@@ -886,8 +885,8 @@ static void ov97_0222BC1C(UnkStruct_0222AE60 *param0)
         }
     }
 
-    CellActor_SetDrawFlag(param0->unk_168[0], v1);
-    CellActor_SetDrawFlag(param0->unk_168[1], v2);
+    Sprite_SetDrawFlag(param0->unk_168[0], v1);
+    Sprite_SetDrawFlag(param0->unk_168[1], v2);
 }
 
 static void ov97_0222BC9C(OverlayManager *param0)
@@ -896,8 +895,8 @@ static void ov97_0222BC9C(OverlayManager *param0)
     UnkStruct_0222AE60 *v1 = OverlayManager_Data(param0);
 
     if (v1->unk_168[0] || v1->unk_168[1]) {
-        CellActor_Delete(v1->unk_168[0]);
-        CellActor_Delete(v1->unk_168[1]);
+        Sprite_Delete(v1->unk_168[0]);
+        Sprite_Delete(v1->unk_168[1]);
         ov97_02237DA0();
     }
 
@@ -912,7 +911,7 @@ static void ov97_0222BC9C(OverlayManager *param0)
     Bg_FreeTilemapBuffer(v1->unk_00, 1);
     Bg_FreeTilemapBuffer(v1->unk_00, 2);
     Heap_FreeToHeap(v1->unk_00);
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
 }
 
 u16 Unk_ov97_0223DF70[] = {
@@ -962,8 +961,8 @@ static void ov97_0222BD14(UnkStruct_0222AE60 *param0)
 
 static void ov97_0222BD48(void *param0)
 {
-    sub_0201DCAC();
-    sub_0200A858();
+    VramTransfer_Process();
+    RenderOam_Transfer();
     Bg_RunScheduledUpdates((BgConfig *)param0);
 
     OS_SetIrqCheckFlag(OS_IE_V_BLANK);
@@ -987,7 +986,7 @@ static int ov97_0222BD70(OverlayManager *param0, int *param1)
     v0->unk_11C = FX32_ONE * 0;
     v0->unk_120 = FX32_ONE * 0;
     v0->unk_0C = SaveData_GetTrainerInfo(v0->unk_04);
-    v0->unk_08 = SaveData_Pokedex(v0->unk_04);
+    v0->unk_08 = SaveData_GetPokedex(v0->unk_04);
     v0->playTime = SaveData_GetPlayTime(v0->unk_04);
     v0->unk_4C = Pokedex_IsObtained(v0->unk_08);
     v0->unk_50 = TrainerInfo_BadgeCount(v0->unk_0C);
@@ -1054,7 +1053,7 @@ static int ov97_0222BE24(OverlayManager *param0, int *param1)
         ov97_0222B404(v1);
         ov97_0222B46C(v1);
 
-        SetMainCallback(ov97_0222BD48, v1->unk_00);
+        SetVBlankCallback(ov97_0222BD48, v1->unk_00);
 
         ov97_0222B9BC(v1);
         ov97_0222BAD8(v1, v1->unk_54);
@@ -1064,8 +1063,8 @@ static int ov97_0222BE24(OverlayManager *param0, int *param1)
         v1->unk_124 = 10;
         break;
     case 5:
-        if (gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B)) {
-            if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+        if (gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B)) {
+            if (gSystem.pressedKeys & PAD_BUTTON_A) {
                 Sound_PlayEffect(1500);
                 v1->unk_58 = v1->unk_DC[v1->unk_54];
 
@@ -1108,11 +1107,11 @@ static int ov97_0222BE24(OverlayManager *param0, int *param1)
             break;
         }
 
-        if (gCoreSys.pressedKeys & PAD_KEY_UP) {
+        if (gSystem.pressedKeys & PAD_KEY_UP) {
             ov97_0222BB88(v1, -1);
         }
 
-        if (gCoreSys.pressedKeys & PAD_KEY_DOWN) {
+        if (gSystem.pressedKeys & PAD_KEY_DOWN) {
             ov97_0222BB88(v1, 1);
         }
 
@@ -1178,7 +1177,7 @@ static void ov97_0222C094(UnkStruct_0222AE60 *param0)
         EnqueueApplication(FS_OVERLAY_ID(overlay97), &Unk_ov97_0223D6BC);
         break;
     case 6:
-        sub_020243E0("data/eoo.dat");
+        RebootAndLoadROM("data/eoo.dat");
         break;
     case 7:
         sub_0200569C();

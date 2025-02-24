@@ -19,7 +19,6 @@
 #include "overlay111/struct_ov111_021D3620.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
 #include "font.h"
 #include "game_options.h"
 #include "graphics.h"
@@ -30,23 +29,24 @@
 #include "narc.h"
 #include "overlay_manager.h"
 #include "palette.h"
+#include "render_oam.h"
 #include "render_window.h"
 #include "save_player.h"
 #include "savedata.h"
+#include "sprite.h"
 #include "strbuf.h"
 #include "string_template.h"
+#include "system.h"
 #include "text.h"
 #include "touch_screen.h"
 #include "unk_020041CC.h"
 #include "unk_02005474.h"
-#include "unk_0200A784.h"
 #include "unk_0200C440.h"
 #include "unk_0200F174.h"
 #include "unk_0201567C.h"
 #include "unk_02015920.h"
-#include "unk_02017728.h"
-#include "unk_0201DBEC.h"
 #include "unk_0201E3D8.h"
+#include "vram_transfer.h"
 
 typedef struct {
     u8 unk_00;
@@ -416,7 +416,7 @@ int ov111_021D0E34(OverlayManager *param0, int *param1)
         break;
     }
 
-    CellActorCollection_Update(v0->unk_16C.unk_00);
+    SpriteList_Update(v0->unk_16C.unk_00);
 
     return 0;
 }
@@ -428,12 +428,12 @@ int ov111_021D0F40(OverlayManager *param0, int *param1)
 
     sub_0201E530();
     *(v1->unk_3D8) = v1->unk_0C;
-    VRAMTransferManager_Destroy();
+    VramTransfer_Free();
 
     ov111_021D1C0C(v1);
 
     OverlayManager_FreeData(param0);
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     Heap_Destroy(115);
 
     return 1;
@@ -518,7 +518,7 @@ static BOOL ov111_021D10B8(UnkStruct_ov111_021D0F7C *param0)
             param0->unk_0F--;
         }
 
-        v3 = sub_02022644((const TouchScreenRect *)Unk_ov111_021D364C);
+        v3 = TouchScreen_CheckRectangleHeld((const TouchScreenRect *)Unk_ov111_021D364C);
 
         if (v3 != 0xffffffff) {
             GXLayers_EngineAToggleLayers((GX_PLANEMASK_BG2), 0);
@@ -745,7 +745,7 @@ static BOOL ov111_021D1508(UnkStruct_ov111_021D0F7C *param0)
         break;
     case 3:
         sub_0201E564(&param0->unk_424, 4, 2);
-        v1 = sub_02022644((const TouchScreenRect *)Unk_ov111_021D3794);
+        v1 = TouchScreen_CheckRectangleHeld((const TouchScreenRect *)Unk_ov111_021D3794);
 
         if (v1 != 0xffffffff) {
             if (ov111_021D2918(param0) < 3) {
@@ -802,7 +802,7 @@ static BOOL ov111_021D1508(UnkStruct_ov111_021D0F7C *param0)
         }
 
         if (param0->unk_0E == (3 - 1)) {
-            v1 = sub_02022664((const TouchScreenRect *)Unk_ov111_021D3610);
+            v1 = TouchScreen_CheckRectanglePressed((const TouchScreenRect *)Unk_ov111_021D3610);
 
             if (v1 != 0xffffffff) {
                 ov111_021D350C(param0->unk_3A0, 1);
@@ -817,7 +817,7 @@ static BOOL ov111_021D1508(UnkStruct_ov111_021D0F7C *param0)
                 break;
             }
         } else {
-            v1 = sub_02022664((const TouchScreenRect *)Unk_ov111_021D3618);
+            v1 = TouchScreen_CheckRectanglePressed((const TouchScreenRect *)Unk_ov111_021D3618);
 
             if (v1 != 0xffffffff) {
                 ov111_021D350C(param0->unk_3A0, 1);
@@ -1128,7 +1128,7 @@ static void ov111_021D1C0C(UnkStruct_ov111_021D0F7C *param0)
 
 static void ov111_021D1D30(void)
 {
-    SetMainCallback(NULL, NULL);
+    SetVBlankCallback(NULL, NULL);
     SetHBlankCallback(NULL, NULL);
     GXLayers_DisableEngineALayers();
     GXLayers_DisableEngineBLayers();
@@ -1195,7 +1195,7 @@ static void ov111_021D1D68(UnkStruct_ov111_021D0F7C *param0)
 
     sub_0201E3D8();
     sub_0201E450(1);
-    SetMainCallback(ov111_021D2090, (void *)param0);
+    SetVBlankCallback(ov111_021D2090, (void *)param0);
 
     return;
 }
@@ -1285,8 +1285,8 @@ static void ov111_021D2090(void *param0)
     }
 
     Bg_RunScheduledUpdates(v0->unk_58);
-    sub_0201DCAC();
-    sub_0200A858();
+    VramTransfer_Process();
+    RenderOam_Transfer();
 
     OS_SetIrqCheckFlag(OS_IE_V_BLANK);
 }
